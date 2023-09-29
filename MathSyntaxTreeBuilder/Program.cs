@@ -37,12 +37,10 @@ public class Program
 
                         if (isMoreImportant)
                         {
-                            lastOp.AddChild(new OpArgNode(currentToken));
                             newNode.AddChild(lastOp);
                         }
                         else
                         {
-                            newNode.AddChild(new OpArgNode(currentToken));
                             lastOp.AddChild(newNode);
                         }
                     }
@@ -59,8 +57,6 @@ public class Program
             }
             else
             {
-                here:
-
                 if (Op.ByKeys.ContainsKey(currentChar.ToString()))
                 {
                     Debug.Assert(int.TryParse(currentToken, out _));
@@ -118,6 +114,7 @@ public class Program
 
     public static void Test()
     {
+        Test("45 + sin(11 + 7)", "(45+(sin((11+7))))", 44.2490127532);
         Test("sin(1 + 7)", "(sin((1+7)))", 0.98935824662);
         Test("sin(1)", "(sin(1))", 0.8414709848);
         Test("4 ^ (5 + 6)", "(4^(5+6))", 4194304);
