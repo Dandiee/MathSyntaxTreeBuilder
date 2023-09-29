@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Security.Principal;
 
 namespace MathSyntaxTreeBuilder;
 
@@ -12,17 +13,13 @@ public class Program
 
     public static Node GetSyntaxTree(string input)
     {
-        input = input.Replace(" ", "");
-
         var currentToken = "";
         var scopeDepth = 0;
-
         OpNode? lastOp = null;
+        var variables = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-        for (var i = 0; i < input.Length; i++)
+        foreach (var currentChar in input)
         {
-            var currentChar = input[i];
-
             if (currentChar == ' ') ;
             else if (currentChar == '(')
             {
@@ -59,29 +56,38 @@ public class Program
             {
                 if (Op.ByKeys.ContainsKey(currentChar.ToString()))
                 {
-                    Debug.Assert(int.TryParse(currentToken, out _));
-                   
                     var newNode = new OpNode(Op.ByKeys[currentChar.ToString()], scopeDepth);
                     if (lastOp != null)
                     {
                         var isMoreImportant = lastOp.ScopeDepth != scopeDepth
                             ? lastOp.ScopeDepth > scopeDepth
-                            : lastOp.Op.Precedent >= newNode.Op.Precedent;
+                            : lastOp.Op.Precedent > newNode.Op.Precedent;
 
                         if (isMoreImportant)
                         {
-                            lastOp.AddChild(new OpArgNode(currentToken));
+                            if (currentToken != string.Empty)
+                            {
+                                lastOp.AddChild(new OpArgNode(currentToken));
+                            }
+
                             newNode.AddChild(lastOp);
                         }
                         else
                         {
-                            newNode.AddChild(new OpArgNode(currentToken));
+                            if (currentToken != string.Empty)
+                            {
+                                newNode.AddChild(new OpArgNode(currentToken));
+                            }
+
                             lastOp.AddChild(newNode);
                         }
                     }
                     else
                     {
-                        newNode.AddChild(new OpArgNode(currentToken));
+                        if (currentToken != string.Empty)
+                        {
+                            newNode.AddChild(new OpArgNode(currentToken));
+                        }
                     }
 
 
@@ -94,10 +100,15 @@ public class Program
                     currentToken += currentChar;
                 }
                 else
-                {
+                { 
                     currentToken += currentChar;
                 }
             }
+        }
+
+        if (lastOp == null)
+        {
+            lastOp = new OpNode(Op.Identity, 0);
         }
 
         lastOp.Children.Add(new OpArgNode(currentToken));
@@ -114,6 +125,15 @@ public class Program
 
     public static void Test()
     {
+        Test("-(5 * 2)", "(-(5 * 2))", -10);
+        Test("-sin(1)", "(-(sin(1)))", -0.8414709848);
+        Test("sin(-(1))", "(sin((-1)))", -0.8414709848);
+        Test("--1", "(-(-1))", 1);
+        Test("--(1)", "(-(-1))", 1);
+        Test("-(1)", "(-1)", -1);
+        Test("-1", "(-1)", -1);
+        Test("-(5 * 4)", "(-(5*4))", -20);
+        Test("4 * x + 6", "((4*x)+6)");
         Test("45 + sin(11 + 7)", "(45+(sin((11+7))))", 44.2490127532);
         Test("sin(1 + 7)", "(sin((1+7)))", 0.98935824662);
         Test("sin(1)", "(sin(1))", 0.8414709848);
@@ -123,13 +143,15 @@ public class Program
         Test("(4 + 5) * 6", "((4+5)*6)", 54);
         Test("4 + 5 * 6", "(4+(5*6))", 34);
         Test("4 * 5 + 6", "((4*5)+6)", 26);
-        Test("4 + 5 - 6", "((4+5)-6)", 3);
-        Test("4 + 5 + 6", "((4+5)+6)", 15);
+        Test("4 + 5 - 6", "(4+(5-6))", 3);
+        Test("4 + (5 + 6)", "(4+(5+6))", 15);
+        Test("(4 + 5) + 6", "((4+5)+6)", 15);
         Test("4 + 5", "(4+5)", 9);
+        Test("5", "(5)",  5);
 
     }
 
-    public static void Test(string input, string expectedOutput, double? expectedEval)
+    public static void Test(string input, string expectedOutput, double? expectedEval = null)
     {
         var result = GetSyntaxTree(input);
         var output = result.BuildString();
@@ -184,11 +206,20 @@ public class Program
     {
         public readonly string Value;
         public readonly double DoubleValue;
+        public readonly string VariableName;
 
         public OpArgNode(string value)
         {
             Value = value;
-            DoubleValue = double.Parse(value);
+            if (double.TryParse(value, out var doubleValue))
+            {
+                DoubleValue = doubleValue;
+            }
+            else
+            {
+                VariableName = value;
+            }
+            
         }
 
         public override string ToString() => Value;
@@ -198,15 +229,25 @@ public class Program
 
     public struct Op
     {
+        public static readonly Op Identity = new("", 0, 1,
+            node => node.Children[0].Eval(),
+            node => $"{node.Children[0].BuildString()}");
+
         public static readonly Dictionary<string, Op> ByKeys = new();
+
+        
 
         public static readonly Op Add = new("+", 1, 2,
             node => node.Children[0].Eval() + node.Children[1].Eval(),
             node => $"{node.Children[0].BuildString()}+{node.Children[1].BuildString()}");
 
         public static readonly Op Subtract = new("-", 1, 2,
-            node => node.Children[0].Eval() - node.Children[1].Eval(),
-            node => $"{node.Children[0].BuildString()}-{node.Children[1].BuildString()}");
+            node => node.Children.Count == 2
+                        ? node.Children[0].Eval() - node.Children[1].Eval()
+                        : -node.Children[0].Eval(),
+            node => node.Children.Count == 2
+                ? $"{node.Children[0].BuildString()}-{node.Children[1].BuildString()}"
+                : $"-{node.Children[0].BuildString()}");
 
         public static readonly Op Mul = new("*", 2, 2,
             node => node.Children[0].Eval() * node.Children[1].Eval(),
@@ -240,7 +281,10 @@ public class Program
             OperandsCount = operandsCount;
             ToStringFunc = toStringFunc;
 
-            ByKeys[name] = this;
+            if (ByKeys != null)
+            {
+                ByKeys[name] = this;
+            }
         }
     }
 }
