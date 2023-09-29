@@ -26,21 +26,9 @@ public class Program
             if (currentChar == ' ') ;
             else if (currentChar == '(')
             {
-                scopeDepth++;
-                continue;
-            }
-            else if (currentChar == ')')
-            {
-                scopeDepth--;
-                continue;
-            }
-            else
-            {
-                if (Op.ByKeys.ContainsKey(currentChar.ToString()))
+                if (Op.ByKeys.TryGetValue(currentToken, out var op))
                 {
-                    Debug.Assert(int.TryParse(currentToken, out _));
-                    var newNode = new OpNode(Op.ByKeys[currentChar.ToString()], scopeDepth);
-
+                    var newNode = new OpNode(Op.ByKeys[currentToken], scopeDepth);
                     if (lastOp != null)
                     {
                         var isMoreImportant = lastOp.ScopeDepth != scopeDepth
@@ -48,8 +36,43 @@ public class Program
                             : lastOp.Op.Precedent >= newNode.Op.Precedent;
 
                         if (isMoreImportant)
-                            //lastOp.ScopeDepth > scopeDepth ||
-                            //lastOp.Op.Precedent >= newNode.Op.Precedent)
+                        {
+                            lastOp.AddChild(new OpArgNode(currentToken));
+                            newNode.AddChild(lastOp);
+                        }
+                        else
+                        {
+                            newNode.AddChild(new OpArgNode(currentToken));
+                            lastOp.AddChild(newNode);
+                        }
+                    }
+
+                    currentToken = "";
+                    lastOp = newNode;
+                }
+                scopeDepth++;
+
+            }
+            else if (currentChar == ')')
+            {
+                scopeDepth--;
+            }
+            else
+            {
+                here:
+
+                if (Op.ByKeys.ContainsKey(currentChar.ToString()))
+                {
+                    Debug.Assert(int.TryParse(currentToken, out _));
+                   
+                    var newNode = new OpNode(Op.ByKeys[currentChar.ToString()], scopeDepth);
+                    if (lastOp != null)
+                    {
+                        var isMoreImportant = lastOp.ScopeDepth != scopeDepth
+                            ? lastOp.ScopeDepth > scopeDepth
+                            : lastOp.Op.Precedent >= newNode.Op.Precedent;
+
+                        if (isMoreImportant)
                         {
                             lastOp.AddChild(new OpArgNode(currentToken));
                             newNode.AddChild(lastOp);
@@ -95,6 +118,8 @@ public class Program
 
     public static void Test()
     {
+        Test("sin(1 + 7)", "(sin((1+7)))", 0.98935824662);
+        Test("sin(1)", "(sin(1))", 0.8414709848);
         Test("4 ^ (5 + 6)", "(4^(5+6))", 4194304);
         Test("4 ^ 5 + 6", "((4^5)+6)", 1030);
         Test("4 + (5 * 6)", "(4+(5*6))", 34);
@@ -111,6 +136,7 @@ public class Program
     {
         var result = GetSyntaxTree(input);
         var output = result.BuildString();
+        expectedOutput = expectedOutput.Replace(" ", "");
         if (expectedEval.HasValue)
         {
             var eval = result.Eval();
@@ -196,6 +222,10 @@ public class Program
         public static readonly Op Exp = new("^", 3, 2,
             node => Math.Pow(node.Children[0].Eval(), node.Children[1].Eval()),
             node => $"{node.Children[0].BuildString()}^{node.Children[1].BuildString()}");
+
+        public static readonly Op Sin = new("sin", 3, 2,
+            node => Math.Sin(node.Children[0].Eval()),
+            node => $"sin({node.Children[0].BuildString()})");
 
         public readonly int Precedent;
         public readonly string Name;
