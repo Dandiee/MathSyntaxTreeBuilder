@@ -21,6 +21,16 @@ public class Program
         foreach (var currentChar in input)
         {
             if (currentChar == ' ') ;
+            else if (currentChar == ',')
+            {
+                //Debug.Assert(lastOp.Op.OperandsCount == 2);
+                lastOp.Children.Add(new OpArgNode(currentToken));
+                currentToken = string.Empty;
+                if (lastOp.Parent != null)
+                {
+                    lastOp = (OpNode)lastOp.Parent;
+                }
+            }
             else if (currentChar == '(')
             {
                 // it's a named function
@@ -83,6 +93,7 @@ public class Program
             else if (currentChar == ')')
             {
                 scopeDepth--;
+                //lastOp = (OpNode)lastOp.Parent;
             }
             else
             {
@@ -122,8 +133,6 @@ public class Program
                         }
                     }
 
-
-
                     currentToken = "";
                     lastOp = newNode;
                 }
@@ -157,6 +166,13 @@ public class Program
 
     public static void Test()
     {
+        Test("max(min(-1, -5), min(-2, -7))", null, -5);
+        Test("max(7, 2)", "(max(7,2))", 7);
+        Test("min(7, 2)", "(min(7,2))", 2);
+        Test("max(cos(1), sin(1))", "(max((cos(1)),(sin(1))))", 0.8414709848);
+        Test("min(cos(1), sin(1))", "(min((cos(1)),(sin(1))))", 0.54030230586);
+        Test("sin(cos(1))", "(sin((cos(1))))", 0.51439525852);
+        Test("x", "(x)");
         Test("-5(1 + 2)", "(-(5*(1+2)))", -15);
         Test("5(1 + 2)", "(5*(1+2))", 15);
         Test("-(5 * 2)", "(-(5 * 2))", -10);
@@ -185,11 +201,17 @@ public class Program
 
     }
 
-    public static void Test(string input, string expectedOutput, double? expectedEval = null)
+    public static void Test(string input, string expectedOutput = null, double? expectedEval = null)
     {
         var result = GetSyntaxTree(input);
         var output = result.BuildString();
-        expectedOutput = expectedOutput.Replace(" ", "");
+
+        if (expectedOutput != null)
+        {
+            expectedOutput = expectedOutput.Replace(" ", "");
+            Debug.Assert(output == expectedOutput);
+        }
+
         if (expectedEval.HasValue)
         {
             var eval = result.Eval();
@@ -197,10 +219,7 @@ public class Program
         }
         
 
-        Debug.Assert(output == expectedOutput);
     }
-
-
 
 
     public abstract class Node
@@ -295,9 +314,21 @@ public class Program
             node => Math.Pow(node.Children[0].Eval(), node.Children[1].Eval()),
             node => $"{node.Children[0].BuildString()}^{node.Children[1].BuildString()}");
 
-        public static readonly Op Sin = new("sin", 3, 2,
+        public static readonly Op Max = new("max", 3, 2,
+            node => Math.Max(node.Children[0].Eval(), node.Children[1].Eval()),
+            node => $"max({node.Children[0].BuildString()},{node.Children[1].BuildString()})");
+
+        public static readonly Op Min = new("min", 3, 2,
+            node => Math.Min(node.Children[0].Eval(), node.Children[1].Eval()),
+            node => $"min({node.Children[0].BuildString()},{node.Children[1].BuildString()})");
+
+        public static readonly Op Sin = new("sin", 3, 1,
             node => Math.Sin(node.Children[0].Eval()),
             node => $"sin({node.Children[0].BuildString()})");
+
+        public static readonly Op Cos = new("cos", 3, 1,
+            node => Math.Cos(node.Children[0].Eval()),
+            node => $"cos({node.Children[0].BuildString()})");
 
         public readonly int Precedent;
         public readonly string Name;
