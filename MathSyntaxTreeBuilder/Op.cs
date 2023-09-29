@@ -36,32 +36,37 @@ public struct Op
 
     public static readonly Op Max = new("max", 3, 2,
         node => Math.Max(node.Children[0].Eval(), node.Children[1].Eval()),
-        node => $"max({node.Children[0].BuildString()},{node.Children[1].BuildString()})", true);
+        node => $"max({node.Children[0].BuildString()},{node.Children[1].BuildString()})", true, true);
 
     public static readonly Op Min = new("min", 3, 2,
         node => Math.Min(node.Children[0].Eval(), node.Children[1].Eval()),
-        node => $"min({node.Children[0].BuildString()},{node.Children[1].BuildString()})", true);
+        node => $"min({node.Children[0].BuildString()},{node.Children[1].BuildString()})", true, true);
 
     public static readonly Op Sin = new("sin", 3, 1,
         node => Math.Sin(node.Children[0].Eval()),
-        node => $"sin({node.Children[0].BuildString()})");
+        node => $"sin({node.Children[0].BuildString()})", true);
 
     public static readonly Op Cos = new("cos", 3, 1,
         node => Math.Cos(node.Children[0].Eval()),
-        node => $"cos({node.Children[0].BuildString()})");
+        node => $"cos({node.Children[0].BuildString()})", true);
+
+    public static readonly Op Tan = new("tan", 3, 1,
+        node => Math.Tan(node.Children[0].Eval()),
+        node => $"tan({node.Children[0].BuildString()})", true);
 
     public readonly int Precedent;
     public readonly string Name;
     public readonly int OperandsCount;
     public readonly Func<OpNode, string> ToStringFunc;
+    public readonly bool IsNamedFunction;
     public readonly Func<OpNode, double> EvalFunc;
     public readonly bool IsMultiVariableFunction;
 
     public Op(string name, int precedent, int operandsCount,
         Func<OpNode, double> evalFunc,
         Func<OpNode, string> toStringFunc,
-        bool 
-        isMultiVariableFunction = false)
+        bool isNamedFunction = false,
+        bool isMultiVariableFunction = false)
     {
         IsMultiVariableFunction = isMultiVariableFunction;
         EvalFunc = evalFunc;
@@ -69,6 +74,7 @@ public struct Op
         Precedent = precedent;
         OperandsCount = operandsCount;
         ToStringFunc = toStringFunc;
+        IsNamedFunction = isNamedFunction;
 
         if (ByKeys != null)
         {

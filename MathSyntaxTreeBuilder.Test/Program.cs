@@ -7,6 +7,8 @@ public class Program
     // Brackets, Exponents, Division/Multiplication, Addition/Subtraction
     public static void Main(string[] args)
     {
+        Test("sin(1)+cos(2)+tan(3)", "(sin(1)+cos(2)+tan(3))", 0.28277760518);
+        Test("max(min(max(min(1, 2), 3), 4), 5)", "(max((min((max((min(1,2)),3)),4)),5))", 5);
         Test("max(min(-1, -5), min(-2, -7))", "(max((min((-1),(-5))),(min((-2),(-7)))))", -5);
         Test("max(7, 2)", "(max(7,2))", 7);
         Test("min(7, 2)", "(min(7,2))", 2);
