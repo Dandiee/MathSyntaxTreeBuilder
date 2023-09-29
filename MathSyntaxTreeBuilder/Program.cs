@@ -23,6 +23,7 @@ public class Program
             if (currentChar == ' ') ;
             else if (currentChar == '(')
             {
+                // it's a named function
                 if (Op.ByKeys.TryGetValue(currentToken, out var op))
                 {
                     var newNode = new OpNode(Op.ByKeys[currentToken], scopeDepth);
@@ -45,6 +46,37 @@ public class Program
                     currentToken = "";
                     lastOp = newNode;
                 }
+                // it's a hidden multiplication with an an op arg
+                // for eg.: 5(4+5)
+                else if (currentToken != string.Empty)
+                {
+                    var newNode = new OpNode(Op.Mul, scopeDepth);
+                    if (lastOp != null)
+                    {
+                        var isMoreImportant = lastOp.ScopeDepth != scopeDepth
+                            ? lastOp.ScopeDepth > scopeDepth
+                            : lastOp.Op.Precedent >= newNode.Op.Precedent;
+
+                        if (isMoreImportant)
+                        {
+                            newNode.AddChild(lastOp);
+                            lastOp.AddChild(new OpArgNode(currentToken));
+                        }
+                        else
+                        {
+                            lastOp.AddChild(newNode);
+                            newNode.AddChild(new OpArgNode(currentToken));
+                        }
+                    }
+                    else
+                    {
+                        newNode.AddChild(new OpArgNode(currentToken));
+                    }
+
+                    currentToken = "";
+                    lastOp = newNode;
+                }
+                
                 scopeDepth++;
 
             }
@@ -125,6 +157,8 @@ public class Program
 
     public static void Test()
     {
+        Test("-5(1 + 2)", "(-(5*(1+2)))", -15);
+        Test("5(1 + 2)", "(5*(1+2))", 15);
         Test("-(5 * 2)", "(-(5 * 2))", -10);
         Test("-sin(1)", "(-(sin(1)))", -0.8414709848);
         Test("sin(-(1))", "(sin((-1)))", -0.8414709848);
