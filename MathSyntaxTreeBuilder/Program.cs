@@ -43,9 +43,13 @@ public class Program
 
                     if (lastOp != null)
                     {
-                        if (
-                            lastOp.ScopeDepth > scopeDepth ||
-                            lastOp.Op.Precedent >= newNode.Op.Precedent)
+                        var isMoreImportant = lastOp.ScopeDepth != scopeDepth
+                            ? lastOp.ScopeDepth > scopeDepth
+                            : lastOp.Op.Precedent >= newNode.Op.Precedent;
+
+                        if (isMoreImportant)
+                            //lastOp.ScopeDepth > scopeDepth ||
+                            //lastOp.Op.Precedent >= newNode.Op.Precedent)
                         {
                             lastOp.AddChild(new OpArgNode(currentToken));
                             newNode.AddChild(lastOp);
@@ -91,6 +95,8 @@ public class Program
 
     public static void Test()
     {
+        Test("4 ^ (5 + 6)", "(4^(5+6))", 4194304);
+        Test("4 ^ 5 + 6", "((4^5)+6)", 1030);
         Test("4 + (5 * 6)", "(4+(5*6))", 34);
         Test("(4 + 5) * 6", "((4+5)*6)", 54);
         Test("4 + 5 * 6", "(4+(5*6))", 34);
