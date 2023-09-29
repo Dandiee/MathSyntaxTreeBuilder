@@ -43,7 +43,9 @@ public class Program
 
                     if (lastOp != null)
                     {
-                        if (lastOp.Op.Precedent >= newNode.Op.Precedent)
+                        if (
+                            lastOp.ScopeDepth > scopeDepth ||
+                            lastOp.Op.Precedent >= newNode.Op.Precedent)
                         {
                             lastOp.AddChild(new OpArgNode(currentToken));
                             newNode.AddChild(lastOp);
@@ -89,6 +91,8 @@ public class Program
 
     public static void Test()
     {
+        Test("4 + (5 * 6)", "(4+(5*6))");
+        Test("(4 + 5) * 6", "((4+5)*6)");
         Test("4 + 5 * 6", "(4+(5*6))");
         Test("4 * 5 + 6", "((4*5)+6)");
         Test("4 + 5 - 6", "((4+5)-6)");
@@ -156,10 +160,17 @@ public class Program
     {
         public static readonly Dictionary<string, Op> ByKeys = new();
 
-        public static readonly Op Add = new("+", 1, 2, node => $"{node.Children[0].BuildString()}+{node.Children[1].BuildString()}");
-        public static readonly Op Subtract = new("-", 1, 2, node => $"{node.Children[0].BuildString()}-{node.Children[1].BuildString()}");
-        public static readonly Op Mul = new("*", 2, 2, node => $"{node.Children[0].BuildString()}*{node.Children[1].BuildString()}");
-        public static readonly Op Div = new("/", 2, 2, node => $"{node.Children[0].BuildString()}/{node.Children[1].BuildString()}");
+        public static readonly Op Add = new("+", 1, 2,
+            node => $"{node.Children[0].BuildString()}+{node.Children[1].BuildString()}");
+
+        public static readonly Op Subtract = new("-", 1, 2,
+            node => $"{node.Children[0].BuildString()}-{node.Children[1].BuildString()}");
+
+        public static readonly Op Mul = new("*", 2, 2,
+            node => $"{node.Children[0].BuildString()}*{node.Children[1].BuildString()}");
+
+        public static readonly Op Div = new("/", 2, 2,
+            node => $"{node.Children[0].BuildString()}/{node.Children[1].BuildString()}");
 
         public readonly int Precedent;
         public readonly string Name;
