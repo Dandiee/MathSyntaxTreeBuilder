@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Xml;
 
 namespace MathSyntaxTreeBuilder;
 
@@ -11,6 +12,8 @@ public class MathSyntaxBuilder
         OpNode? lastOp = null;
         var variables = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var namedFunctionDepth = 0;
+
+        var namedOpStack = new Stack<(OpNode? Named, int Dept)>();
 
         foreach (var currentChar in input)
         {
@@ -39,36 +42,33 @@ public class MathSyntaxBuilder
                     {
                         break;
                     }
-                
+
                     lastOp = (OpNode)lastOp.Parent;
                 }
             }
             else if (currentChar == ')')
             {
-
+                var poppedScope = namedOpStack.Pop();
                 scopeDepth--;
-
-                if (currentToken != string.Empty)
+                if (poppedScope.Named != null)
                 {
-                    if (lastOp.Op.IsNamedFunction)// && lastOp.ScopeDepth > scopeDepth)
+                    if (currentToken != string.Empty)
                     {
                         lastOp.AddChild(new OpArgNode(currentToken));
                         currentToken = string.Empty;
-                        if (lastOp.Parent != null)
-                        {
-                            lastOp = (OpNode)lastOp.Parent;
-                        }
-                        else Debug.Assert(true);
                     }
+                    lastOp = poppedScope.Named;
                 }
+
+
                 //
                 //if ((OpNode)lastOp.Parent != null)
                 //{
                 //    lastOp = (OpNode)lastOp.Parent;
                 //}
-                
 
-                
+
+
             }
             else if (currentChar == '(')
             {
@@ -94,42 +94,49 @@ public class MathSyntaxBuilder
 
                     currentToken = "";
                     lastOp = newNode;
+
+                    namedOpStack.Push(new(lastOp, scopeDepth));
                 }
                 // it's a hidden multiplication with an an op arg
                 // for eg.: 5(4+5)
-                else if (currentToken != string.Empty)
+                //else if (currentToken != string.Empty)
+                //{
+                //    var newNode = new OpNode(Op.Mul, scopeDepth);
+                //    if (lastOp != null)
+                //    {
+                //        var isMoreImportant = lastOp.ScopeDepth != scopeDepth
+                //            ? lastOp.ScopeDepth > scopeDepth
+                //            : lastOp.Op.Precedent >= newNode.Op.Precedent;
+                //
+                //        if (isMoreImportant)
+                //        {
+                //            newNode.AddChild(lastOp);
+                //            lastOp.AddChild(new OpArgNode(currentToken));
+                //        }
+                //        else
+                //        {
+                //            lastOp.AddChild(newNode);
+                //            newNode.AddChild(new OpArgNode(currentToken));
+                //        }
+                //    }
+                //    else
+                //    {
+                //        newNode.AddChild(new OpArgNode(currentToken));
+                //    }
+                //
+                //    currentToken = "";
+                //    lastOp = newNode;
+                //}
+                else
                 {
-                    var newNode = new OpNode(Op.Mul, scopeDepth);
-                    if (lastOp != null)
-                    {
-                        var isMoreImportant = lastOp.ScopeDepth != scopeDepth
-                            ? lastOp.ScopeDepth > scopeDepth
-                            : lastOp.Op.Precedent >= newNode.Op.Precedent;
-
-                        if (isMoreImportant)
-                        {
-                            newNode.AddChild(lastOp);
-                            lastOp.AddChild(new OpArgNode(currentToken));
-                        }
-                        else
-                        {
-                            lastOp.AddChild(newNode);
-                            newNode.AddChild(new OpArgNode(currentToken));
-                        }
-                    }
-                    else
-                    {
-                        newNode.AddChild(new OpArgNode(currentToken));
-                    }
-
-                    currentToken = "";
-                    lastOp = newNode;
+                    namedOpStack.Push(new(null, scopeDepth));
                 }
-                
+
+
                 scopeDepth++;
 
             }
-            
+
             else
             {
                 if (Op.ByKeys.ContainsKey(currentChar.ToString()))
@@ -190,7 +197,7 @@ public class MathSyntaxBuilder
                     currentToken += currentChar;
                 }
                 else
-                { 
+                {
                     currentToken += currentChar;
                 }
             }
@@ -205,7 +212,7 @@ public class MathSyntaxBuilder
         {
             lastOp.AddChild(new OpArgNode(currentToken));
         }
-        
+
 
         Node root = lastOp;
 
@@ -216,5 +223,5 @@ public class MathSyntaxBuilder
 
         return root;
     }
-    
+
 }
