@@ -30,6 +30,8 @@ public partial class MainWindow
                 {
                     var tree = MathSyntaxBuilder.GetSyntaxTree(textBox.Text);
                     Draw(tree);
+                    Eval.Text = tree.Eval().ToString();
+                    Result.Text = tree.BuildString();
                 }
                 catch
                 {

@@ -8,8 +8,6 @@ public struct Op
 
     public static readonly Dictionary<string, Op> ByKeys = new();
 
-
-
     public static readonly Op Add = new("+", 1, 2,
         node => node.Children[0].Eval() + node.Children[1].Eval(),
         node => $"{node.Children[0].BuildString()}+{node.Children[1].BuildString()}");

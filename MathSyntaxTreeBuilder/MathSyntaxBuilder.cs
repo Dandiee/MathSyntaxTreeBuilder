@@ -1,4 +1,6 @@
-﻿namespace MathSyntaxTreeBuilder;
+﻿using System.Diagnostics;
+
+namespace MathSyntaxTreeBuilder;
 
 public class MathSyntaxBuilder
 {
@@ -15,12 +17,21 @@ public class MathSyntaxBuilder
             if (currentChar == ' ') ;
             else if (currentChar == ',')
             {
-                //Debug.Assert(lastOp.Op.OperandsCount == 2);
-                lastOp.AddChild(new OpArgNode(currentToken));
-                currentToken = string.Empty;
-                //lastOp = (OpNode)lastOp.Parent;
-                //scopeDepth--;
-                //while (lastOp.Parent is OpNode op && lastOp.ScopeDepth != scopeDepth)
+                if (currentToken != string.Empty)
+                {
+                    lastOp.AddChild(new OpArgNode(currentToken));
+                    currentToken = string.Empty;
+                    //lastOp = (OpNode)lastOp.Parent;
+                    //while (true)
+                    //{
+                    //    if (lastOp.Op.IsMultiVariableFunction && lastOp.Children.Count < lastOp.Op.OperandsCount)
+                    //    {
+                    //        break;
+                    //    }
+                    //
+                    //    lastOp = (OpNode)lastOp.Parent;
+                    //}
+                }
 
                 while (true)
                 {
@@ -28,21 +39,36 @@ public class MathSyntaxBuilder
                     {
                         break;
                     }
-
+                
                     lastOp = (OpNode)lastOp.Parent;
                 }
-
-                //if (lastOp.Children.Count == lastOp.Op.OperandsCount)
-                //{
-                //    do
-                //    {
-                //        lastOp = lastOp.Parent as OpNode;
-                //    } while (lastOp != null && lastOp.Children.Count == lastOp.Op.OperandsCount);
-                //}
             }
             else if (currentChar == ')')
             {
+
                 scopeDepth--;
+
+                if (currentToken != string.Empty)
+                {
+                    if (lastOp.Op.IsNamedFunction)// && lastOp.ScopeDepth > scopeDepth)
+                    {
+                        lastOp.AddChild(new OpArgNode(currentToken));
+                        currentToken = string.Empty;
+                        if (lastOp.Parent != null)
+                        {
+                            lastOp = (OpNode)lastOp.Parent;
+                        }
+                        else Debug.Assert(true);
+                    }
+                }
+                //
+                //if ((OpNode)lastOp.Parent != null)
+                //{
+                //    lastOp = (OpNode)lastOp.Parent;
+                //}
+                
+
+                
             }
             else if (currentChar == '(')
             {
@@ -54,7 +80,7 @@ public class MathSyntaxBuilder
                     {
                         var isMoreImportant = lastOp.ScopeDepth != scopeDepth
                             ? lastOp.ScopeDepth > scopeDepth
-                            : lastOp.Op.Precedent >= newNode.Op.Precedent;
+                            : lastOp.Op.Precedent > newNode.Op.Precedent;
 
                         if (isMoreImportant)
                         {
@@ -115,6 +141,15 @@ public class MathSyntaxBuilder
                             ? lastOp.ScopeDepth > scopeDepth
                             : lastOp.Op.Precedent > newNode.Op.Precedent;
 
+                        if (!isMoreImportant)
+                        {
+                            if (lastOp.ScopeDepth == scopeDepth &&
+                                lastOp.Op.Precedent == newNode.Op.Precedent)
+                            {
+                                isMoreImportant = true;
+                            }
+                        }
+
                         if (isMoreImportant)
                         {
                             if (currentToken != string.Empty)
@@ -147,6 +182,11 @@ public class MathSyntaxBuilder
                 }
                 else if (char.IsDigit(currentChar))
                 {
+                    if (currentChar == '2')
+                    {
+
+                    }
+
                     currentToken += currentChar;
                 }
                 else
@@ -161,7 +201,11 @@ public class MathSyntaxBuilder
             lastOp = new OpNode(Op.Identity, 0);
         }
 
-        lastOp.AddChild(new OpArgNode(currentToken));
+        if (currentToken != string.Empty)
+        {
+            lastOp.AddChild(new OpArgNode(currentToken));
+        }
+        
 
         Node root = lastOp;
 

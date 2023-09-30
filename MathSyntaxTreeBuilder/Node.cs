@@ -19,8 +19,35 @@ public class OpNode : Node
 
     public void AddChild(Node child)
     {
-        Children.Add(child);
-        child.Parent = this;
+        if (Children.Count == Op.OperandsCount)
+        {
+            OverwriteChild(child);
+        }
+        else
+        {
+            Children.Add(child);
+            child.Parent = this;
+        }
+    }
+
+    // sin-ben vagyunk, egy gyereke van, a cos, most lenne kettő a szorzással
+    public void OverwriteChild(Node child)
+    {
+        // remove the last children from the original
+        var lastOriginalChild = Children[^1];
+        Children.Remove(lastOriginalChild);
+
+        // add original child to the new child
+        ((OpNode)child).AddChild(lastOriginalChild);
+
+        this.AddChild(child);
+
+        
+        //child.Parent?.Children.Remove(child);
+        //this.Parent = child.Parent;
+        //var temp = child.Parent;
+        //child.Parent = this;
+
     }
 
     public OpNode(Op op, int scopeDepth)

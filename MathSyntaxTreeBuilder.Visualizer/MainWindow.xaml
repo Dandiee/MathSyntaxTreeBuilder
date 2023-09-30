@@ -10,10 +10,14 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <TextBox Grid.Row="0" TextChanged="InputChanged" FontFamily="Consolas" FontSize="18" Padding="10"/>
         <Canvas Grid.Row="1" x:Name="TreeCanvas" Background="DarkSlateGray">
 
         </Canvas>
+        <TextBox x:Name="Result" Grid.Row="2" FontSize="18" Padding="10" IsReadOnly="True"/>
+        <TextBox x:Name="Eval" Grid.Row="3" FontSize="18" Padding="10" IsReadOnly="True"/>
     </Grid>
 </Window>
