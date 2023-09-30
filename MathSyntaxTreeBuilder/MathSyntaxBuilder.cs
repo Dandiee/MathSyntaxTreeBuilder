@@ -57,17 +57,14 @@ public class MathSyntaxBuilder
                         lastOp.AddChild(new OpArgNode(currentToken));
                         currentToken = string.Empty;
                     }
-                    lastOp = poppedScope.Named;
+                    lastOp = (OpNode)poppedScope.Named.Parent;
                 }
-
 
                 //
                 //if ((OpNode)lastOp.Parent != null)
                 //{
                 //    lastOp = (OpNode)lastOp.Parent;
                 //}
-
-
 
             }
             else if (currentChar == '(')
@@ -94,43 +91,10 @@ public class MathSyntaxBuilder
 
                     currentToken = "";
                     lastOp = newNode;
+                }
+                
 
-                    namedOpStack.Push(new(lastOp, scopeDepth));
-                }
-                // it's a hidden multiplication with an an op arg
-                // for eg.: 5(4+5)
-                //else if (currentToken != string.Empty)
-                //{
-                //    var newNode = new OpNode(Op.Mul, scopeDepth);
-                //    if (lastOp != null)
-                //    {
-                //        var isMoreImportant = lastOp.ScopeDepth != scopeDepth
-                //            ? lastOp.ScopeDepth > scopeDepth
-                //            : lastOp.Op.Precedent >= newNode.Op.Precedent;
-                //
-                //        if (isMoreImportant)
-                //        {
-                //            newNode.AddChild(lastOp);
-                //            lastOp.AddChild(new OpArgNode(currentToken));
-                //        }
-                //        else
-                //        {
-                //            lastOp.AddChild(newNode);
-                //            newNode.AddChild(new OpArgNode(currentToken));
-                //        }
-                //    }
-                //    else
-                //    {
-                //        newNode.AddChild(new OpArgNode(currentToken));
-                //    }
-                //
-                //    currentToken = "";
-                //    lastOp = newNode;
-                //}
-                else
-                {
-                    namedOpStack.Push(new(null, scopeDepth));
-                }
+                namedOpStack.Push(new(lastOp, scopeDepth));
 
 
                 scopeDepth++;
