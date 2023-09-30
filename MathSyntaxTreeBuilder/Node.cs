@@ -25,6 +25,17 @@ public class OpNode : Node
         }
         else
         {
+            if (child.Parent != null)
+            {
+                var originalParent = child.Parent;
+                originalParent.Children.Remove(child);
+                originalParent.Children.Add(this);
+
+                this.Parent = originalParent;
+            }
+
+
+
             Children.Add(child);
             child.Parent = this;
         }
@@ -37,10 +48,16 @@ public class OpNode : Node
         var lastOriginalChild = Children[^1];
         Children.Remove(lastOriginalChild);
 
-        // add original child to the new child
-        ((OpNode)child).AddChild(lastOriginalChild);
+        // add the new children to the 
+        this.Children.Add(child);
+        child.Parent = this;
 
-        this.AddChild(child);
+
+        child.Children.Add(lastOriginalChild);
+        lastOriginalChild.Parent = child;
+
+        // add original child to the new child
+        
 
         
         //child.Parent?.Children.Remove(child);

@@ -8,6 +8,7 @@ public class Program
     public static void Main(string[] args)
     {
 
+        Test("sin(2*3+1)", "(sin(((2*3)+1)))", 0.65698659871);
         Test("max(min(max(min(1, 2), 3), 4), 5)", "(max((min((max((min(1,2)),3)),4)),5))", 5);
 
         Test("sin(cos(1)*2)", "(sin(((cos(1))*2)))", 0.88224261632);
