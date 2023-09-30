@@ -22,7 +22,7 @@ public class MathSyntaxBuilder
             {
                 if (currentToken != string.Empty)
                 {
-                    lastOp.AddChild(new OpArgNode(currentToken));
+                    lastOp.AddOperand(currentToken);
                     currentToken = string.Empty;
                     //lastOp = (OpNode)lastOp.Parent;
                     //while (true)
@@ -54,10 +54,10 @@ public class MathSyntaxBuilder
                 {
                     if (currentToken != string.Empty)
                     {
-                        lastOp.AddChild(new OpArgNode(currentToken));
+                        lastOp.AddOperand(currentToken);
                         currentToken = string.Empty;
                     }
-                    lastOp = (OpNode)poppedScope.Named.Parent;
+                    lastOp = (OpNode)poppedScope.Named;
                 }
 
                 //
@@ -125,7 +125,7 @@ public class MathSyntaxBuilder
                         {
                             if (currentToken != string.Empty)
                             {
-                                lastOp.AddChild(new OpArgNode(currentToken));
+                                lastOp.AddOperand(currentToken);
                             }
 
                             newNode.AddChild(lastOp);
@@ -134,7 +134,7 @@ public class MathSyntaxBuilder
                         {
                             if (currentToken != string.Empty)
                             {
-                                newNode.AddChild(new OpArgNode(currentToken));
+                                newNode.AddOperand(currentToken);
                             }
 
                             lastOp.AddChild(newNode);
@@ -144,7 +144,7 @@ public class MathSyntaxBuilder
                     {
                         if (currentToken != string.Empty)
                         {
-                            newNode.AddChild(new OpArgNode(currentToken));
+                            newNode.AddOperand(currentToken);
                         }
                     }
 
@@ -174,7 +174,7 @@ public class MathSyntaxBuilder
 
         if (currentToken != string.Empty)
         {
-            lastOp.AddChild(new OpArgNode(currentToken));
+            lastOp.AddOperand(currentToken);
         }
 
 

@@ -41,6 +41,11 @@ public class OpNode : Node
         }
     }
 
+    public void AddOperand(string value)
+    {
+        Children.Add(new OpArgNode(value));
+    }
+
     // sin-ben vagyunk, egy gyereke van, a cos, most lenne kettő a szorzással
     public void OverwriteChild(Node child)
     {

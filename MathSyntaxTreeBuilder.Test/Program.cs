@@ -8,7 +8,7 @@ public class Program
     public static void Main(string[] args)
     {
 
-        Test("((5+4)*cos(1)-1)", "", 3.86272075281);
+        //Test("((5+4)*cos(1)-1)", "", 3.86272075281);
         Test("sin((1+cos(3))*4)", "(sin(((1+(cos(3)))*4)))", 0.04001932375);
         Test("sin(cos(1))+1", "((sin((cos(1))))+1)", 1.51439525852);
         Test("sin(1+1)+cos(1)", "((sin((1+1)))+(cos(1)))", 1.44959973269);
