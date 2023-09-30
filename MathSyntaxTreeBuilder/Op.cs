@@ -55,14 +55,14 @@ public struct Op
     public readonly int Precedent;
     public readonly string Name;
     public readonly int OperandsCount;
-    public readonly Func<OpNode, string> ToStringFunc;
+    public readonly Func<NodeOp, string> ToStringFunc;
     public readonly bool IsNamedFunction;
-    public readonly Func<OpNode, double> EvalFunc;
+    public readonly Func<NodeOp, double> EvalFunc;
     public readonly bool IsMultiVariableFunction;
 
     public Op(string name, int precedent, int operandsCount,
-        Func<OpNode, double> evalFunc,
-        Func<OpNode, string> toStringFunc,
+        Func<NodeOp, double> evalFunc,
+        Func<NodeOp, string> toStringFunc,
         bool isNamedFunction = false,
         bool isMultiVariableFunction = false)
     {

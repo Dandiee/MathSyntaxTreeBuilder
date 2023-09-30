@@ -150,9 +150,9 @@ public class VisualNode
         Depth = depth;
         Parent = parent;
 
-        Text = node is OpNode op
+        Text = node is NodeOp op
             ? op.Op.Name
-            : (node as OpArgNode).Value;
+            : (node as NodeArg).Value;
 
         for (var i = 0; i < node.Children.Count; i++)
         {

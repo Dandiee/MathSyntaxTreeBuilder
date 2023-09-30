@@ -7,167 +7,46 @@ public class MathSyntaxBuilder
 {
     public static Node GetSyntaxTree(string input)
     {
-        var currentToken = "";
-        var scopeDepth = 0;
-        OpNode? lastOp = null;
-        var variables = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        var namedFunctionDepth = 0;
+        var normalizedInput = input.Trim().Replace(" ", "").ToLowerInvariant();
 
-        var namedOpStack = new Stack<(OpNode? Named, int Dept)>();
+        var token = string.Empty;
+        var depth = 0;
+        var root = new NodeOp(Op.Identity, -1);
+        NodeOp node = root;
 
-        foreach (var currentChar in input)
+        foreach (var c in normalizedInput)
         {
-            if (currentChar == ' ') ;
-            else if (currentChar == ',')
+            if (c == ',') { }
+            else if (c == ')')
             {
-                if (currentToken != string.Empty)
-                {
-                    lastOp.AddOperand(currentToken);
-                    currentToken = string.Empty;
-                }
-
-                while (true)
-                {
-                    if (lastOp.Op.IsMultiVariableFunction && lastOp.Children.Count < lastOp.Op.OperandsCount)
-                    {
-                        break;
-                    }
-
-                    lastOp = (OpNode)lastOp.Parent;
-                }
+                depth--;
             }
-            else if (currentChar == ')')
+            else if (c == '(')
             {
-                var poppedScope = namedOpStack.Pop();
-                scopeDepth--;
-                if (poppedScope.Named != null)
-                {
-
-                    if (currentToken != string.Empty)
-                    {
-                        lastOp.AddOperand(currentToken);
-                        currentToken = string.Empty;
-                    }
-                    lastOp = (OpNode)poppedScope.Named;
-                }
-
+                depth++;
             }
-            else if (currentChar == '(')
+            else if (Op.ByKeys.ContainsKey(c.ToString()) || (!string.IsNullOrEmpty(token) && Op.ByKeys.ContainsKey(token)))
             {
-                // it's a named function
-                if (Op.ByKeys.TryGetValue(currentToken, out var op))
-                {
-                    var newNode = new OpNode(Op.ByKeys[currentToken], scopeDepth);
-                    if (lastOp != null)
-                    {
-                        var isMoreImportant = lastOp.ScopeDepth != scopeDepth
-                            ? lastOp.ScopeDepth > scopeDepth
-                            : lastOp.Op.Precedent > newNode.Op.Precedent;
+                var isOpToken = Op.ByKeys.TryGetValue(token, out var opToken);
+                var op = isOpToken ? opToken : Op.ByKeys[c.ToString()];
 
-                        if (isMoreImportant)
-                        {
-                            newNode.AddChild(lastOp);
-                        }
-                        else
-                        {
-                            lastOp.AddChild(newNode);
-                        }
-                    }
+                var newNode = new NodeOp(op, depth);
 
-                    currentToken = "";
-                    lastOp = newNode;
+                if (isOpToken) token = string.Empty;
 
-                    namedOpStack.Push(new(lastOp, scopeDepth));
-                }
-                else
-                {
-                    namedOpStack.Push(new(null, scopeDepth));
-
-                }
-
-
-
-
-                scopeDepth++;
-
+                node = node.AddOp(newNode, token);
+                token = string.Empty;
             }
-
-            else
-            {
-                if (Op.ByKeys.ContainsKey(currentChar.ToString()))
-                {
-                    var newNode = new OpNode(Op.ByKeys[currentChar.ToString()], scopeDepth);
-                    if (lastOp != null)
-                    {
-                        var isMoreImportant = lastOp.ScopeDepth != scopeDepth
-                            ? lastOp.ScopeDepth > scopeDepth
-                            : lastOp.Op.Precedent > newNode.Op.Precedent;
-
-                        if (!isMoreImportant)
-                        {
-                            if (lastOp.ScopeDepth == scopeDepth &&
-                                lastOp.Op.Precedent == newNode.Op.Precedent)
-                            {
-                                isMoreImportant = true;
-                            }
-                        }
-
-                        if (isMoreImportant)
-                        {
-                            if (currentToken != string.Empty)
-                            {
-                                lastOp.AddOperand(currentToken);
-                            }
-
-                            newNode.AddChild(lastOp);
-                        }
-                        else
-                        {
-                            if (currentToken != string.Empty)
-                            {
-                                newNode.AddOperand(currentToken);
-                            }
-
-                            lastOp.AddChild(newNode);
-                        }
-                    }
-                    else
-                    {
-                        if (currentToken != string.Empty)
-                        {
-                            newNode.AddOperand(currentToken);
-                        }
-                    }
-
-                    currentToken = "";
-                    lastOp = newNode;
-                }
-                else
-                {
-                    currentToken += currentChar;
-                }
-            }
+            else token += c.ToString();
         }
 
-        if (lastOp == null)
+        if (token.Length > 0)
         {
-            lastOp = new OpNode(Op.Identity, 0);
+            node.AddArg(token);
         }
-
-        if (currentToken != string.Empty)
-        {
-            lastOp.AddOperand(currentToken);
-        }
-
-
-        Node root = lastOp;
-
-        while (root.Parent != null)
-        {
-            root = root.Parent!;
-        }
-
-        return root;
+        
+        
+        return root!;
     }
 
 }
