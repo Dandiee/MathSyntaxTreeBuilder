@@ -24,16 +24,6 @@ public class MathSyntaxBuilder
                 {
                     lastOp.AddOperand(currentToken);
                     currentToken = string.Empty;
-                    //lastOp = (OpNode)lastOp.Parent;
-                    //while (true)
-                    //{
-                    //    if (lastOp.Op.IsMultiVariableFunction && lastOp.Children.Count < lastOp.Op.OperandsCount)
-                    //    {
-                    //        break;
-                    //    }
-                    //
-                    //    lastOp = (OpNode)lastOp.Parent;
-                    //}
                 }
 
                 while (true)
@@ -59,12 +49,6 @@ public class MathSyntaxBuilder
                     }
                     lastOp = (OpNode)poppedScope.Named;
                 }
-
-                //
-                //if ((OpNode)lastOp.Parent != null)
-                //{
-                //    lastOp = (OpNode)lastOp.Parent;
-                //}
 
             }
             else if (currentChar == '(')

@@ -25,13 +25,28 @@ public class OpNode : Node
         }
         else
         {
+            // re-parenting
             if (child.Parent != null)
             {
-                var originalParent = child.Parent;
-                originalParent.Children.Remove(child);
-                originalParent.Children.Add(this);
+                var isMoreImportant = ((OpNode)child.Parent).ScopeDepth != this.ScopeDepth
+                    ? ((OpNode)child.Parent).ScopeDepth > this.ScopeDepth
+                    : ((OpNode)child.Parent).Op.Precedent > this.Op.Precedent;
 
-                this.Parent = originalParent;
+                if (isMoreImportant)
+                {
+                    child = child.Parent; // mínusz, a target szülő
+                    
+                    //this.Children.Add(originalParent);
+                    //originalParent.Parent = this;
+                }
+                else
+                {
+                    var originalParent = child.Parent;
+                    originalParent.Children.Remove(child);
+                    originalParent.Children.Add(this);
+
+                    this.Parent = originalParent;
+                }
             }
 
 
