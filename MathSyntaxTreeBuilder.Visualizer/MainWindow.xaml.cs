@@ -32,9 +32,11 @@ public partial class MainWindow
                     Draw(tree);
                     Eval.Text = tree.Eval().ToString();
                     Result.Text = tree.BuildString();
+                    textBox.Foreground = new SolidColorBrush(Colors.Black);
                 }
                 catch
                 {
+                    textBox.Foreground = new SolidColorBrush(Colors.Red);
                 }
 
             }

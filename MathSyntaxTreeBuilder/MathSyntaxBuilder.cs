@@ -23,10 +23,18 @@ public class MathSyntaxBuilder
             }
             else if (c == '(')
             {
+                if (token != string.Empty)
+                {
+                    var namedOp = Op.ByKeys[token];
+                    var newNode = new NodeOp(namedOp, depth);
+                    node = node.AddOp(newNode, null);
+                    token = string.Empty;
+                }
                 depth++;
             }
             else if (Op.ByKeys.ContainsKey(c.ToString()) || (!string.IsNullOrEmpty(token) && Op.ByKeys.ContainsKey(token)))
             {
+
                 var isOpToken = Op.ByKeys.TryGetValue(token, out var opToken);
                 var op = isOpToken ? opToken : Op.ByKeys[c.ToString()];
 

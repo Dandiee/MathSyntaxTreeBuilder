@@ -36,10 +36,9 @@ public class NodeOp : Node
         // the new node is *, the last is +, so the new must be deeper
         // add node to the current children
 
-        var areOnTheSameDepth = nodeToAdd.Depth == Depth;
-        var nodeToAddIsMoreImportant = areOnTheSameDepth
+        var nodeToAddIsMoreImportant = nodeToAdd.Depth == Depth
             ? nodeToAdd.Op.Precedent >= Op.Precedent
-            : nodeToAdd.Depth >= Op.Precedent;
+            : nodeToAdd.Depth >= Depth;
 
 
         if (nodeToAddIsMoreImportant)
@@ -72,24 +71,33 @@ public class NodeOp : Node
         }
 
         var newHead = this;
+        // this is the recursive part, se the example (1+2)*(3-1)+1
+        // when the last +1 arrives, the last node is the '-' but we need to move two steps up, not just one
+        // not just the new head is interesting, maybe the nodeToAdd will be between some way higher level nodes
+        var oldChild = this; 
         var isSufficient = false;
         while (!isSufficient)
         {
-            isSufficient = newHead.Depth <= nodeToAdd.Depth && newHead.Op.Precedent <= nodeToAdd.Op.Precedent;
+            isSufficient = newHead.Depth == nodeToAdd.Depth
+                ? newHead.Op.Precedent <= nodeToAdd.Op.Precedent
+                : newHead.Depth <= nodeToAdd.Depth;
+                //newHead.Depth <= nodeToAdd.Depth && newHead.Op.Precedent <= nodeToAdd.Op.Precedent;
             if (isSufficient)
             {
                 break;
             }
+
+            oldChild = newHead;
             newHead = newHead.Parent as NodeOp; Debug.Assert(newHead != null);
         }
 
         // the found node must be re-parented
         // for eg.: 1*5+6, the new node '+' must be created as a new parent for the '*'
-        newHead.Children.Remove(this);        // identity op 
+        newHead.Children.Remove(oldChild);        // identity op 
         newHead.Children.Add(nodeToAdd);
 
         nodeToAdd.Parent = newHead;
-        nodeToAdd.Children.Add(this);
+        nodeToAdd.Children.Add(oldChild);
         Parent = nodeToAdd;
 
         return nodeToAdd;
