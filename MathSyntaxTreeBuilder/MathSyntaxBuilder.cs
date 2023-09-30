@@ -42,6 +42,7 @@ public class MathSyntaxBuilder
                 scopeDepth--;
                 if (poppedScope.Named != null)
                 {
+
                     if (currentToken != string.Empty)
                     {
                         lastOp.AddOperand(currentToken);
@@ -75,10 +76,16 @@ public class MathSyntaxBuilder
 
                     currentToken = "";
                     lastOp = newNode;
-                }
-                
 
-                namedOpStack.Push(new(lastOp, scopeDepth));
+                    namedOpStack.Push(new(lastOp, scopeDepth));
+                }
+                else
+                {
+                    namedOpStack.Push(new(null, scopeDepth));
+
+                }
+
+
 
 
                 scopeDepth++;
@@ -134,15 +141,6 @@ public class MathSyntaxBuilder
 
                     currentToken = "";
                     lastOp = newNode;
-                }
-                else if (char.IsDigit(currentChar))
-                {
-                    if (currentChar == '2')
-                    {
-
-                    }
-
-                    currentToken += currentChar;
                 }
                 else
                 {
