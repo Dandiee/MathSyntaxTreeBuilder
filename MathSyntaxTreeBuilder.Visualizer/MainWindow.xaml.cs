@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Reflection;
 using System.Reflection.Metadata;
 using System.Windows;
 using System.Windows.Controls;
@@ -49,10 +50,35 @@ public partial class MainWindow
         }
     }
 
+    private void AddTickChars()
+    {
+        var text = InputTextBox.Text.ToArray();
+        CharactersGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = GridLength.Auto});
+        
+        var s = new TextBlock { Text = " " };
+        CharactersGrid.Children.Add(s);
+        Grid.SetColumn(s, 0);
+
+        for (var index = 0; index < text.Length; index++)
+        {
+            var c = text[index];
+            CharactersGrid.ColumnDefinitions.Add(new ColumnDefinition() {Width = new GridLength(1, GridUnitType.Star)});
+
+
+            var tb = new TextBlock
+            {
+                Text = c.ToString()
+            };
+
+            CharactersGrid.Children.Add(tb);
+            Grid.SetColumn(tb, index + 1);
+        }
+    }
+
     private void Draw(Node root)
     {
         Clear();
-
+        AddTickChars();
         var q1 = new Queue<(Node, int)>(new (Node, int)[] { new(root, 0) });
         var maxDepth = 0;
         while (q1.Count > 0)
@@ -135,6 +161,8 @@ public partial class MainWindow
 
     private void Clear()
     {
+        CharactersGrid.ColumnDefinitions.Clear();
+        CharactersGrid.Children.Clear();
         TreeCanvas.Children.Clear();
     }
 

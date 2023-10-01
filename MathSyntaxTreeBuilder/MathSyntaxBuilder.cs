@@ -13,20 +13,21 @@ public class MathSyntaxBuilder
 
         for (var index = 0; index < (length ?? input.Length); index++)
         {
-            var c = normalizedInput[index];
+            var c = input[index];
+            if (c == ' ') continue;
             if (c == ',')
             {
-                //if (token != string.Empty)
-                //{
-                //    var operandOwner = node;
-                //    while (!operandOwner.Op.IsMultiVariableFunction && operandOwner.Depth != depth)
-                //    {
-                //        operandOwner = (NodeOp)operandOwner.Parent;
-                //    }
+                if (token != string.Empty)
+                {
+                    var operandOwner = node;
+                    while (!operandOwner.Op.IsMultiVariableFunction && operandOwner.Depth != depth)
+                    {
+                        operandOwner = (NodeOp)operandOwner.Parent;
+                    }
 
-                //    operandOwner.AddArg(token);
-                //    token = string.Empty;
-                //}
+                    operandOwner.AddArg(token);
+                    token = string.Empty;
+                }
             }
             else if (c == ')') depth--;
             else if (c == '(')
