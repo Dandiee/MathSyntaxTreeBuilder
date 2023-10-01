@@ -81,7 +81,7 @@ public class NodeOp : Node
             isSufficient = newHead.Depth == nodeToAdd.Depth
                 ? newHead.Op.Precedent <= nodeToAdd.Op.Precedent
                 : newHead.Depth <= nodeToAdd.Depth;
-                //newHead.Depth <= nodeToAdd.Depth && newHead.Op.Precedent <= nodeToAdd.Op.Precedent;
+
             if (isSufficient)
             {
                 break;

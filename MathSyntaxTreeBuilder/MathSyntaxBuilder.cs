@@ -1,7 +1,4 @@
-﻿using System.Diagnostics;
-using System.Xml;
-
-namespace MathSyntaxTreeBuilder;
+﻿namespace MathSyntaxTreeBuilder;
 
 public class MathSyntaxBuilder
 {
@@ -12,15 +9,25 @@ public class MathSyntaxBuilder
         var token = string.Empty;
         var depth = 0;
         var root = new NodeOp(Op.Identity, -1);
-        NodeOp node = root;
+        var node = root;
 
         foreach (var c in normalizedInput)
         {
-            if (c == ',') { }
-            else if (c == ')')
+            if (c == ',')
             {
-                depth--;
+                //if (token != string.Empty)
+                //{
+                //    var operandOwner = node;
+                //    while (!operandOwner.Op.IsMultiVariableFunction && operandOwner.Depth != depth)
+                //    {
+                //        operandOwner = (NodeOp)operandOwner.Parent;
+                //    }
+
+                //    operandOwner.AddArg(token);
+                //    token = string.Empty;
+                //}
             }
+            else if (c == ')') depth--;
             else if (c == '(')
             {
                 if (token != string.Empty)
@@ -34,17 +41,14 @@ public class MathSyntaxBuilder
             }
             else if (Op.ByKeys.ContainsKey(c.ToString()) || (!string.IsNullOrEmpty(token) && Op.ByKeys.ContainsKey(token)))
             {
-
                 var isOpToken = Op.ByKeys.TryGetValue(token, out var opToken);
                 var op = isOpToken ? opToken : Op.ByKeys[c.ToString()];
-
                 var newNode = new NodeOp(op, depth);
-
                 if (isOpToken) token = string.Empty;
-
                 node = node.AddOp(newNode, token);
                 token = string.Empty;
             }
+            
             else token += c.ToString();
         }
 
@@ -53,8 +57,7 @@ public class MathSyntaxBuilder
             node.AddArg(token);
         }
         
-        
-        return root!;
+        return root;
     }
 
 }
