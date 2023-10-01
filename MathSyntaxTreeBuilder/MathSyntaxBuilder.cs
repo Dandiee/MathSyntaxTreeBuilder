@@ -1,10 +1,13 @@
-﻿namespace MathSyntaxTreeBuilder;
+﻿using System.Diagnostics;
+
+namespace MathSyntaxTreeBuilder;
 
 public class MathSyntaxBuilder
 {
     public static Node GetSyntaxTree(string input, int? length = null)
     {
         var token = string.Empty;
+        var tokenDepth = 0;
         var depth = 0;
         var root = new NodeRoot();
         var node = root as NodeOp;
@@ -17,14 +20,14 @@ public class MathSyntaxBuilder
             {
                 if (token != string.Empty)
                 {
-                    var operandOwner = node;
-                    while (!operandOwner.Op.IsMultiVariableFunction && operandOwner.Depth != depth)
-                    {
-                        operandOwner = (NodeOp)operandOwner.Parent;
-                    }
-
-                    operandOwner.AddArg(token);
+                    node.AddArg(token);
                     token = string.Empty;
+                    var namedOp = node;
+                    while (!(namedOp.Op.IsMultiVariableFunction && namedOp.Depth == depth - 1))
+                    {
+                        namedOp = (NodeOp)namedOp.Parent;
+                    }
+                    node = namedOp;
                 }
             }
             else if (c == ')') depth--;
@@ -51,7 +54,11 @@ public class MathSyntaxBuilder
                 token = string.Empty;
             }
 
-            else token += c.ToString();
+            else
+            {
+                token += c.ToString();
+                tokenDepth = depth;
+            }
         }
 
         if (!length.HasValue || length.Value == input.Length)
