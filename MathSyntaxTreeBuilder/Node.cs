@@ -101,13 +101,16 @@ public class NodeOp : Node
         var isSufficient = false;
         while (!isSufficient)
         {
-            // here, the '<' is important
+            // here, the '<' is important for Precedent
             // with '<=' the order of the operations will be reserved
             // eg: 1-2+3, first we evaluate 1-2 then the result with +3
             // it matters if there's another operand sandwiched between them
             // 1-2*5+7 => (1-(2*5))+7 => (1-(10))+7 => (-9)+7 = -2      // first grouped together because of '<'
             // vs
             // 1-2*5+7 => 1-((2*5)+7) =>  1-((10)+7) => 1-(17) = -16    // second grouped together because of '<='
+
+            // the '<' for the depth is just as good as '<='
+            // because when the  depths are equal, the depths wont matter anymore
             isSufficient = newHead.Depth == nodeToAdd.Depth
                 ? newHead.Op.Precedent < nodeToAdd.Op.Precedent
                 : newHead.Depth < nodeToAdd.Depth;
