@@ -52,6 +52,7 @@ public struct Op
         node => Math.Tan(node.Children[0].Eval()),
         node => $"tan({node.Children[0].BuildString()})", true);
 
+
     public readonly int Precedent;
     public readonly string Name;
     public readonly int OperandsCount;

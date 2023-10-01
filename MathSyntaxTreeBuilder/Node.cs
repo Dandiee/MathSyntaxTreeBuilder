@@ -7,7 +7,13 @@ public abstract class Node
     public Node? Parent { get; set; }
     public abstract string BuildString();
     public abstract double Eval();
+    public readonly int Depth;
     public readonly List<Node> Children = new();
+
+    protected Node(int depth)
+    {
+        Depth = depth;
+    }
 }
 
 public class NodeRoot : NodeOp
@@ -29,20 +35,19 @@ public class NodeRoot : NodeOp
 public class NodeOp : Node
 {
     public readonly Op Op;
-    public readonly int Depth;
 
     public NodeOp(Op op, int depth)
+     : base(depth)
     {
         Op = op;
-        Depth = depth;
     }
 
     public override string ToString() => Op.Name;
 
-    public override string BuildString() => $"({Op.ToStringFunc(this)})";
+    public override string BuildString() => $"{Op.ToStringFunc(this)}";
     public override double Eval() => Op.EvalFunc(this);
 
-    public void AddArg(string value) => Children.Add(new NodeArg(value));
+    public void AddArg(string value) => Children.Add(new NodeArg(value, Depth + 1));
 
     public NodeOp AddOp(NodeOp nodeToAdd, string? argument)
     {
@@ -102,7 +107,7 @@ public class NodeOp : Node
             }
 
             oldChild = newHead;
-            newHead = newHead.Parent as NodeOp; Debug.Assert(newHead != null);
+            newHead = newHead.Parent as NodeOp;
         }
 
         // the found node must be re-parented
@@ -125,7 +130,8 @@ public class NodeArg : Node
     public readonly double DoubleValue;
     public readonly string VariableName;
 
-    public NodeArg(string value)
+    public NodeArg(string value, int depth)
+        : base(depth)
     {
         Value = value;
         if (double.TryParse(value, out var doubleValue))

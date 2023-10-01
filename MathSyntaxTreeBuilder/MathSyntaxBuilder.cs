@@ -1,13 +1,10 @@
-﻿using System.Diagnostics;
-
-namespace MathSyntaxTreeBuilder;
+﻿namespace MathSyntaxTreeBuilder;
 
 public class MathSyntaxBuilder
 {
-    public static Node GetSyntaxTree(string input, int? length = null)
+    public static NodeRoot GetSyntaxTree(string input, int? length = null)
     {
         var token = string.Empty;
-        var tokenDepth = 0;
         var depth = 0;
         var root = new NodeRoot();
         var node = root as NodeOp;
@@ -57,7 +54,6 @@ public class MathSyntaxBuilder
             else
             {
                 token += c.ToString();
-                tokenDepth = depth;
             }
         }
 

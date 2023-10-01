@@ -1,11 +1,7 @@
-﻿using System;
-using System.Reflection;
-using System.Reflection.Metadata;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Shapes;
-using System.Xml.Linq;
 
 namespace MathSyntaxTreeBuilder.Visualizer;
 
@@ -14,7 +10,7 @@ public partial class MainWindow
     public MainWindow()
     {
         InitializeComponent();
-
+        InputTextBox.Text = "sin((5+4*cos(1))*cos(2))";
     }
 
     private void InputChanged(object sender, TextChangedEventArgs e)
@@ -75,15 +71,14 @@ public partial class MainWindow
         }
     }
 
-    private void Draw(Node root)
+    private void Draw(NodeRoot root)
     {
         Clear();
         AddTickChars();
 
-        var r = root as NodeRoot;
-        TokenTextBox.Text = r.LeftOverToken;
-        DepthTextBox.Text = r.CurrentDepth.ToString();
-        LastOpTextBox.Text = r.LastOperation.Op.Name;
+        TokenTextBox.Text = root.LeftOverToken;
+        DepthTextBox.Text = root.CurrentDepth.ToString();
+        LastOpTextBox.Text = root.LastOperation.Op.Name;
         SubstringTextBox.Text = InputTextBox.Text.Substring(0, (int)LengthLimitSlider.Value);
 
         Eval.Text = string.Empty;
@@ -141,8 +136,8 @@ public partial class MainWindow
                 current.VerticalOffset = current.Parent.VerticalOffset + 80;
             }
 
-            Canvas.SetLeft(current.Border, current.HorizontalOffset);
-            Canvas.SetTop(current.Border, current.VerticalOffset);
+            Canvas.SetLeft(current.Grid, current.HorizontalOffset);
+            Canvas.SetTop(current.Grid, current.VerticalOffset);
 
             if (current.Parent != null)
             {
@@ -159,14 +154,13 @@ public partial class MainWindow
                 Panel.SetZIndex(line, -1);
             }
 
-            TreeCanvas.Children.Add(current.Border);
+            TreeCanvas.Children.Add(current.Grid);
 
             foreach (var child in current.Children)
             {
                 queue.Enqueue(child);
             }
         }
-
     }
 
     private void Clear()
@@ -190,8 +184,10 @@ public class VisualNode
     public List<VisualNode> Children { get; } = new();
     public int IndexInRow { get; }
     public int Depth { get; }
+    
     public string Text { get; }
-    public Border Border { get; }
+    public Grid Grid { get; }
+    private Border Border { get; }
     public double HorizontalOffset;
     public double VerticalOffset;
 
@@ -213,15 +209,20 @@ public class VisualNode
             Children.Add(new VisualNode(child, canvas, totalDepth, width, this, index, depth + 1));
         }
 
+
         Border = new Border
         {
             Width = 40,
             Height = 40,
             CornerRadius = new CornerRadius(20),
-            Background = new SolidColorBrush(Colors.White),
+            Background =  node is NodeOp ? 
+                node is NodeRoot 
+                    ? Brushes.Black
+                    : Brushes.White
+                : Brushes.DarkGray,
             HorizontalAlignment = HorizontalAlignment.Center,
             Margin = new Thickness(0),
-            BorderBrush = new SolidColorBrush(Colors.Yellow),
+            BorderBrush = Brushes.Yellow,
             BorderThickness = new Thickness(2),
             Child = new TextBlock
             {
@@ -229,8 +230,35 @@ public class VisualNode
                 TextAlignment = TextAlignment.Center,
                 VerticalAlignment = VerticalAlignment.Center,
                 HorizontalAlignment = HorizontalAlignment.Center,
-                FontSize = 18
+                FontSize = 18,
+                FontWeight = FontWeights.Bold
             }
         };
+
+        Grid = new Grid();
+        Grid.Children.Add(Border);
+        Grid.Children.Add(new Border
+        {
+            Width = 16,
+            Height = 16,
+            CornerRadius = new CornerRadius(8),
+            BorderBrush = Brushes.Black,
+            Background = Brushes.Yellow,
+            BorderThickness = new Thickness(1),
+            HorizontalAlignment = HorizontalAlignment.Left,
+            VerticalAlignment = VerticalAlignment.Top,
+            Margin = new Thickness(-5, -5, 0, 0),
+            Child = new TextBlock
+            {
+                Text = node.Depth.ToString(),
+                Foreground = Brushes.Black,
+                VerticalAlignment = VerticalAlignment.Center,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                FontFamily = new FontFamily("Consolas"),
+                FontSize = 9
+            }
+        });
+
+
     }
 }
