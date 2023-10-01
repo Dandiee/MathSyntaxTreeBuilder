@@ -6,18 +6,25 @@
         xmlns:local="clr-namespace:MathSyntaxTreeBuilder.Visualizer"
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
-    <Grid>
+    <Grid Background="#333">
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
-        <TextBox Grid.Row="0" TextChanged="InputChanged" FontFamily="Consolas" FontSize="18" Padding="10"/>
-        <Canvas Grid.Row="1" x:Name="TreeCanvas" Background="DarkSlateGray">
+        <TextBox x:Name="InputTextBox" Grid.Row="0" TextChanged="InputChanged" FontFamily="Consolas" FontSize="18" Padding="10"/>
+        <Slider x:Name="LengthLimitSlider" Grid.Row="1" Minimum="0" 
+                IsSnapToTickEnabled="True" TickFrequency="1"
+                Margin="10"
+                TickPlacement="Both"
+                ValueChanged="LengthLimitSlider_OnValueChanged"
+                Maximum="{Binding ElementName=InputTextBox, Path=Text.Length}"/>
+        <Canvas Grid.Row="2" x:Name="TreeCanvas" Background="DarkSlateGray">
 
         </Canvas>
-        <TextBox x:Name="Result" Grid.Row="2" FontSize="18" Padding="10" IsReadOnly="True"/>
-        <TextBox x:Name="Eval" Grid.Row="3" FontSize="18" Padding="10" IsReadOnly="True"/>
+        <TextBox x:Name="Result" Grid.Row="3" FontSize="18" Padding="10" IsReadOnly="True"/>
+        <TextBox x:Name="Eval" Grid.Row="4" FontSize="18" Padding="10" IsReadOnly="True"/>
     </Grid>
 </Window>

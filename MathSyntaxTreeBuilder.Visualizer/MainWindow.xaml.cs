@@ -20,25 +20,31 @@ public partial class MainWindow
     {
         if (sender is TextBox textBox)
         {
-            if (string.IsNullOrEmpty(textBox.Text))
-            {
-                Clear();
-            }
-            else
-            {
-                try
-                {
-                    var tree = MathSyntaxBuilder.GetSyntaxTree(textBox.Text);
-                    Draw(tree);
-                    Eval.Text = tree.Eval().ToString();
-                    Result.Text = tree.BuildString();
-                    textBox.Foreground = new SolidColorBrush(Colors.Black);
-                }
-                catch
-                {
-                    textBox.Foreground = new SolidColorBrush(Colors.Red);
-                }
+            LengthLimitSlider.Value = InputTextBox.Text.Length;
+            Calculate();
+        }
+    }
 
+    private void Calculate()
+    {
+        if (string.IsNullOrEmpty(InputTextBox.Text))
+        {
+            Clear();
+        }
+        else
+        {
+            try
+            {
+                
+                var tree = MathSyntaxBuilder.GetSyntaxTree(InputTextBox.Text, (int)LengthLimitSlider.Value);
+                Draw(tree);
+                Eval.Text = tree.Eval().ToString();
+                Result.Text = tree.BuildString();
+                InputTextBox.Foreground = new SolidColorBrush(Colors.Black);
+            }
+            catch
+            {
+                InputTextBox.Foreground = new SolidColorBrush(Colors.Red);
             }
         }
     }
@@ -130,6 +136,12 @@ public partial class MainWindow
     private void Clear()
     {
         TreeCanvas.Children.Clear();
+    }
+
+    private void LengthLimitSlider_OnValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        Calculate();
+
     }
 }
 

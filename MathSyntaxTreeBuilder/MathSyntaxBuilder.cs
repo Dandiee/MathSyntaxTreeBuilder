@@ -2,7 +2,7 @@
 
 public class MathSyntaxBuilder
 {
-    public static Node GetSyntaxTree(string input)
+    public static Node GetSyntaxTree(string input, int? length = null)
     {
         var normalizedInput = input.Trim().Replace(" ", "").ToLowerInvariant();
 
@@ -11,8 +11,9 @@ public class MathSyntaxBuilder
         var root = new NodeOp(Op.Identity, -1);
         var node = root;
 
-        foreach (var c in normalizedInput)
+        for (var index = 0; index < (length ?? input.Length); index++)
         {
+            var c = normalizedInput[index];
             if (c == ',')
             {
                 //if (token != string.Empty)
@@ -37,9 +38,11 @@ public class MathSyntaxBuilder
                     node = node.AddOp(newNode, null);
                     token = string.Empty;
                 }
+
                 depth++;
             }
-            else if (Op.ByKeys.ContainsKey(c.ToString()) || (!string.IsNullOrEmpty(token) && Op.ByKeys.ContainsKey(token)))
+            else if (Op.ByKeys.ContainsKey(c.ToString()) ||
+                     (!string.IsNullOrEmpty(token) && Op.ByKeys.ContainsKey(token)))
             {
                 var isOpToken = Op.ByKeys.TryGetValue(token, out var opToken);
                 var op = isOpToken ? opToken : Op.ByKeys[c.ToString()];
@@ -48,7 +51,7 @@ public class MathSyntaxBuilder
                 node = node.AddOp(newNode, token);
                 token = string.Empty;
             }
-            
+
             else token += c.ToString();
         }
 
