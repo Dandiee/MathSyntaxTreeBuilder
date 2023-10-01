@@ -10,6 +10,20 @@ public abstract class Node
     public readonly List<Node> Children = new();
 }
 
+public class NodeRoot : NodeOp
+{
+    public string LeftOverToken { get; set; } = string.Empty;
+    public int CurrentDepth { get; set; }
+    public NodeOp LastOperation { get; set; }
+    public override string BuildString() => Children[0].BuildString();
+    public override double Eval() => Children[0].Eval();
+
+    public NodeRoot() : base(Op.Identity, -1)
+    {
+        LastOperation = this;
+    }
+}
+
 
 [DebuggerDisplay("{Op.Name}")]
 public class NodeOp : Node

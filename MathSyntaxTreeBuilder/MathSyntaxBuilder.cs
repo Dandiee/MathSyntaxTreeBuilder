@@ -4,12 +4,10 @@ public class MathSyntaxBuilder
 {
     public static Node GetSyntaxTree(string input, int? length = null)
     {
-        var normalizedInput = input.Trim().Replace(" ", "").ToLowerInvariant();
-
         var token = string.Empty;
         var depth = 0;
-        var root = new NodeOp(Op.Identity, -1);
-        var node = root;
+        var root = new NodeRoot();
+        var node = root as NodeOp;
 
         for (var index = 0; index < (length ?? input.Length); index++)
         {
@@ -56,11 +54,18 @@ public class MathSyntaxBuilder
             else token += c.ToString();
         }
 
-        if (token.Length > 0)
+        if (!length.HasValue || length.Value == input.Length)
         {
-            node.AddArg(token);
+            if (token.Length > 0)
+            {
+                node.AddArg(token);
+            }
         }
-        
+
+        root.LeftOverToken = token;
+        root.CurrentDepth = depth;
+        root.LastOperation = node;
+
         return root;
     }
 

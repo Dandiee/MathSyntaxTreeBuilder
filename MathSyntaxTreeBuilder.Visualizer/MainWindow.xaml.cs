@@ -79,6 +79,16 @@ public partial class MainWindow
     {
         Clear();
         AddTickChars();
+
+        var r = root as NodeRoot;
+        TokenTextBox.Text = r.LeftOverToken;
+        DepthTextBox.Text = r.CurrentDepth.ToString();
+        LastOpTextBox.Text = r.LastOperation.Op.Name;
+        SubstringTextBox.Text = InputTextBox.Text.Substring(0, (int)LengthLimitSlider.Value);
+
+        Eval.Text = string.Empty;
+        Result.Text = string.Empty;
+
         var q1 = new Queue<(Node, int)>(new (Node, int)[] { new(root, 0) });
         var maxDepth = 0;
         while (q1.Count > 0)
