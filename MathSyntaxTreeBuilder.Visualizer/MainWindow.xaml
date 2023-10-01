@@ -59,6 +59,7 @@
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
                     <TextBlock Grid.Row="0" Grid.Column="0" Text="Token"/>
                     <TextBlock Foreground="Yellow" Grid.Row="0" Grid.Column="1" x:Name="TokenTextBox"/>
@@ -66,14 +67,28 @@
                     <TextBlock Grid.Row="1" Grid.Column="0" Text="Depth"/>
                     <TextBlock Foreground="Yellow" Grid.Row="1" Grid.Column="1" x:Name="DepthTextBox"/>
 
-                    <TextBlock Grid.Row="2" Grid.Column="0" Text="Last Op"/>
+                    <TextBlock Grid.Row="2" Grid.Column="0" Text="Op"/>
                     <TextBlock Foreground="Yellow" Grid.Row="2" Grid.Column="1" x:Name="LastOpTextBox"/>
-                </Grid>
-                
-            </StackPanel>
-            <Canvas x:Name="TreeCanvas" Grid.Column="1">
 
-            </Canvas>
+                    <TextBlock Grid.Row="3" Grid.Column="0" Text="Vars"/>
+                    <TextBlock Foreground="Yellow" Grid.Row="3" Grid.Column="1" x:Name="VariablesTextBox"/>
+                </Grid>
+
+            </StackPanel>
+            <Grid Grid.Column="1">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition/>
+                    <ColumnDefinition Width="5"/>
+                    <ColumnDefinition/>
+                </Grid.ColumnDefinitions>
+                <GridSplitter Grid.Column="1" HorizontalAlignment="Stretch"  VerticalAlignment="Stretch"/>
+                <Canvas ClipToBounds="True" x:Name="TreeCanvas" Grid.Column="0"/>
+                <Canvas ClipToBounds="True" x:Name="FunctionCanvas" Grid.Column="2" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
+                    <Line X1="0" X2="100" Y1="0" Y2="100" Stroke="Yellow"/>
+                </Canvas>
+
+            </Grid>
+
         </Grid>
 
         <TextBox x:Name="Result" Grid.Row="3" FontSize="18" Padding="10" IsReadOnly="True"/>

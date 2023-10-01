@@ -1,4 +1,4 @@
-﻿using System.Xml.Linq;
+﻿using System.Diagnostics;
 
 namespace MathSyntaxTreeBuilder;
 
@@ -32,12 +32,26 @@ public class MathSyntaxBuilder
             else if (c == ')') depth--;
             else if (c == '(')
             {
-                if (token != string.Empty) // named ops: "sin", "cos", "min", "max", ...
+                if (token != string.Empty) // it's not just simple scoping
                 {
-                    var namedOp = Op.ByKeys[token];
-                    var newNode = new NodeOp(namedOp, depth);
-                    node = node.AddOp(newNode, null);
-                    token = string.Empty;
+
+                    // named ops: "sin", "cos", "min", "max", ...
+                    if (Op.ByKeys.TryGetValue(token, out var op))
+                    {
+                        node = node.AddOp(new NodeOp(op, depth), null);
+                        token = string.Empty;
+                    }
+                    //else Debug.Assert(false, "Hidden multiplication is not supported yet.");
+                    //TODO: it must be a hidden multiplication
+                    //{ 
+                    //
+                    //    var mulArg = token == "-"
+                    //        ? "-1"
+                    //        : token;
+                    //
+                    //    node = node.AddOp(new NodeOp(Op.Mul, depth), mulArg);
+                    //    token = string.Empty;
+                    //}
                 }
 
                 depth++;
@@ -54,10 +68,7 @@ public class MathSyntaxBuilder
                 node = node.AddOp(new NodeOp(op, depth), token);
                 token = string.Empty;
             }
-            else
-            {
-                token += c.ToString();
-            }
+            else token += c.ToString();
         }
 
         if (!length.HasValue || length.Value == input.Length)
@@ -72,7 +83,32 @@ public class MathSyntaxBuilder
         root.CurrentDepth = depth;
         root.LastOperation = node;
 
+        FinalizeRoot(root);
+
         return root;
+    }
+
+    private static void FinalizeRoot(NodeRoot root)
+    {
+        var queue = new Queue<Node>(new Node[] { root });
+        while (queue.Count > 0)
+        {
+            var node = queue.Dequeue();
+            if (node is NodeArg arg)
+            {
+                if (!arg.IsNumerical)
+                {
+                    root.Variables.Add(arg.Value);
+                }
+            }
+            else
+            {
+                foreach (var child in node.Children)
+                {
+                    queue.Enqueue(child);
+                }
+            }
+        }
     }
 
 }

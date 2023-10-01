@@ -35,7 +35,16 @@ public partial class MainWindow
                 
                 var tree = MathSyntaxBuilder.GetSyntaxTree(InputTextBox.Text, (int)LengthLimitSlider.Value);
                 Draw(tree);
-                Eval.Text = tree.Eval().ToString();
+
+                if (tree.Variables.Count > 0)
+                {
+                    DrawFunction(tree);
+                }
+                else
+                {
+                    Eval.Text = tree.Eval().ToString();
+                }
+                
                 Result.Text = tree.BuildString();
                 InputTextBox.Foreground = new SolidColorBrush(Colors.Black);
             }
@@ -71,6 +80,50 @@ public partial class MainWindow
         }
     }
 
+    private void DrawFunction(NodeRoot root)
+    {
+        if (root.Variables.Count != 1) return;
+
+        var variableName = root.Variables.First();
+
+        var c = FunctionCanvas; c.Children.Clear();
+        var o = new Point(c.ActualWidth / 2, c.ActualHeight / 2);
+
+        c.Children.Add(new Line { X1 = 0, X2 = c.ActualWidth, Y1 = o.Y, Y2 = o.Y, Stroke = Brushes.Yellow });
+        c.Children.Add(new Line { X1 = o.X, X2 = o.X, Y1 = 0, Y2 = c.ActualHeight, Stroke = Brushes.Yellow });
+
+        var poly = new Polyline { Stroke = Brushes.Red, StrokeThickness = 2};
+
+        var pixelPerUnit = 50;
+        var totalRange = c.ActualWidth / pixelPerUnit;
+
+        var vars = new Dictionary<string, double>();
+        Point? lastY = null;
+        for (var x = totalRange / -2d; x <= totalRange; x += .01)
+        {
+            vars[variableName] = x;
+            
+            var y = root.Eval(vars);
+            if (!double.IsNaN(y))
+            {
+                poly.Points.Add(new Point(x * pixelPerUnit + o.X, y * -pixelPerUnit + o.Y));
+            }
+            else
+            {
+                if (poly.Points.Count > 2)
+                {
+                    c.Children.Add(poly);
+                    poly = new Polyline() { Stroke = Brushes.Red, StrokeThickness = 2 };
+                }
+            }
+        }
+
+        if (poly.Points.Count > 2)
+        { 
+            c.Children.Add(poly);
+        }
+    }
+
     private void Draw(NodeRoot root)
     {
         Clear();
@@ -80,7 +133,7 @@ public partial class MainWindow
         DepthTextBox.Text = root.CurrentDepth.ToString();
         LastOpTextBox.Text = root.LastOperation.Op.Name;
         SubstringTextBox.Text = InputTextBox.Text.Substring(0, (int)LengthLimitSlider.Value);
-
+        VariablesTextBox.Text = string.Join(", ", root.Variables);
         Eval.Text = string.Empty;
         Result.Text = string.Empty;
 

@@ -6,7 +6,7 @@ public abstract class Node
 {
     public Node? Parent { get; set; }
     public abstract string BuildString();
-    public abstract double Eval();
+    public abstract double Eval(Dictionary<string, double>? variables = null);
     public readonly int Depth;
     public readonly List<Node> Children = new();
 
@@ -21,8 +21,9 @@ public class NodeRoot : NodeOp
     public string LeftOverToken { get; set; } = string.Empty;
     public int CurrentDepth { get; set; }
     public NodeOp LastOperation { get; set; }
+    public HashSet<string> Variables { get; } = new(StringComparer.OrdinalIgnoreCase);
     public override string BuildString() => Children[0].BuildString();
-    public override double Eval() => Children[0].Eval();
+    public override double Eval(Dictionary<string, double>? variables = null) => Children[0].Eval(variables);
 
     public NodeRoot() : base(Op.Identity, -1)
     {
@@ -34,6 +35,8 @@ public class NodeRoot : NodeOp
 [DebuggerDisplay("{Op.Name}")]
 public class NodeOp : Node
 {
+   
+
     public readonly Op Op;
 
     public NodeOp(Op op, int depth)
@@ -45,12 +48,10 @@ public class NodeOp : Node
     public override string ToString() => Op.Name;
 
     public override string BuildString() => $"{Op.ToStringFunc(this)}";
-    public override double Eval() => Op.EvalFunc(this);
+    public override double Eval(Dictionary<string, double>? variables = null) => Op.EvalFunc(this, variables);
 
     public void AddArg(string value)
     {
-        if (string.IsNullOrEmpty(value))
-        {}
         Children.Add(new NodeArg(value, Depth + 1));
     }
 
@@ -74,7 +75,7 @@ public class NodeOp : Node
             // eg.: 1+2*4, the op * will takes the new argument 2
             if (!string.IsNullOrEmpty(argument))
             {
-                nodeToAdd.AddArg(argument!);// Debug.Assert(argument != null);
+                nodeToAdd.AddArg(argument);
             }
 
             return nodeToAdd;
@@ -97,7 +98,7 @@ public class NodeOp : Node
         // this is the recursive part, se the example (1+2)*(3-1)+1
         // when the last +1 arrives, the last node is the '-' but we need to move two steps up, not just one
         // not just the new head is interesting, maybe the nodeToAdd will be between some way higher level nodes
-        var oldChild = this; 
+        var oldChild = this;
         var isSufficient = false;
         while (!isSufficient)
         {
@@ -140,16 +141,32 @@ public class NodeOp : Node
 [DebuggerDisplay("{Value}")]
 public class NodeArg : Node
 {
+    public static readonly IReadOnlyDictionary<string, double> Constants = new Dictionary<string, double>(StringComparer.OrdinalIgnoreCase)
+    {
+        ["pi"] = Math.PI,
+        ["e"] = Math.E,
+        ["tau"] = Math.Tau,
+    };
+
     public readonly string Value;
     public readonly double DoubleValue;
     public readonly string VariableName;
+    public readonly bool IsNumerical;
 
     public NodeArg(string value, int depth)
         : base(depth)
     {
         Value = value;
-        if (double.TryParse(value, out var doubleValue))
+
+        if (Constants.TryGetValue(value, out var constValue))
         {
+            Value = value.ToLowerInvariant();
+            DoubleValue = constValue;
+            IsNumerical = true;
+        }
+        else if (double.TryParse(value, out var doubleValue))
+        {
+            IsNumerical = true;
             DoubleValue = doubleValue;
         }
         else
@@ -161,5 +178,7 @@ public class NodeArg : Node
 
     public override string ToString() => Value;
     public override string BuildString() => Value;
-    public override double Eval() => DoubleValue!;
+
+    public override double Eval(Dictionary<string, double>? variables = null)
+        => IsNumerical ? DoubleValue : variables[VariableName];
 }
