@@ -1,4 +1,6 @@
-﻿namespace MathSyntaxTreeBuilder;
+﻿using System.Xml.Linq;
+
+namespace MathSyntaxTreeBuilder;
 
 public class MathSyntaxBuilder
 {
@@ -40,17 +42,17 @@ public class MathSyntaxBuilder
 
                 depth++;
             }
-            else if (Op.ByKeys.ContainsKey(c.ToString()) ||
-                     (!string.IsNullOrEmpty(token) && Op.ByKeys.ContainsKey(token)))
+            else if (Op.ByKeys.TryGetValue(c.ToString(), out var op))
             {
-                var isOpToken = Op.ByKeys.TryGetValue(token, out var opToken);
-                var op = isOpToken ? opToken : Op.ByKeys[c.ToString()];
-                var newNode = new NodeOp(op, depth);
-                if (isOpToken) token = string.Empty;
-                node = node.AddOp(newNode, token);
-                token = string.Empty;
-            }
+                if (op.Equals(Op.Subtract) && token == string.Empty)
+                {
+                    token += "-";
+                    continue;
+                }
 
+                var newNode = new NodeOp(op, depth);
+                node = node.AddOp(newNode, null);
+            }
             else
             {
                 token += c.ToString();

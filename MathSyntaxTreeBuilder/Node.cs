@@ -47,7 +47,12 @@ public class NodeOp : Node
     public override string BuildString() => $"{Op.ToStringFunc(this)}";
     public override double Eval() => Op.EvalFunc(this);
 
-    public void AddArg(string value) => Children.Add(new NodeArg(value, Depth + 1));
+    public void AddArg(string value)
+    {
+        if (string.IsNullOrEmpty(value))
+        {}
+        Children.Add(new NodeArg(value, Depth + 1));
+    }
 
     public NodeOp AddOp(NodeOp nodeToAdd, string? argument)
     {
@@ -68,9 +73,9 @@ public class NodeOp : Node
 
             // the argument, if available belongs to the more important node
             // eg.: 1+2*4, the op * will takes the new argument 2
-            if (argument != null)
+            if (!string.IsNullOrEmpty(argument))
             {
-                nodeToAdd.AddArg(argument!); Debug.Assert(argument != null);
+                nodeToAdd.AddArg(argument!);// Debug.Assert(argument != null);
             }
 
             return nodeToAdd;
