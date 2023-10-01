@@ -32,7 +32,7 @@ public class MathSyntaxBuilder
             else if (c == ')') depth--;
             else if (c == '(')
             {
-                if (token != string.Empty)
+                if (token != string.Empty) // named ops: "sin", "cos", "min", "max", ...
                 {
                     var namedOp = Op.ByKeys[token];
                     var newNode = new NodeOp(namedOp, depth);
@@ -42,16 +42,17 @@ public class MathSyntaxBuilder
 
                 depth++;
             }
-            else if (Op.ByKeys.TryGetValue(c.ToString(), out var op))
+            else if (Op.ByKeys.TryGetValue(c.ToString(), out var op)) // character ops: '+', '-', '/', '*', '^'
             {
+                // it's a negative token not an operation
                 if (op.Equals(Op.Subtract) && token == string.Empty)
                 {
                     token += "-";
                     continue;
                 }
 
-                var newNode = new NodeOp(op, depth);
-                node = node.AddOp(newNode, null);
+                node = node.AddOp(new NodeOp(op, depth), token);
+                token = string.Empty;
             }
             else
             {
