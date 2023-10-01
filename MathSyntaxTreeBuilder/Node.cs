@@ -59,7 +59,6 @@ public class NodeOp : Node
         // it's a more important node
         // the new node is *, the last is +, so the new must be deeper
         // add node to the current children
-
         var nodeToAddIsMoreImportant = nodeToAdd.Depth == Depth
             ? nodeToAdd.Op.Precedent >= Op.Precedent
             : nodeToAdd.Depth >= Depth;
@@ -102,9 +101,16 @@ public class NodeOp : Node
         var isSufficient = false;
         while (!isSufficient)
         {
+            // here, the '<' is important
+            // with '<=' the order of the operations will be reserved
+            // eg: 1-2+3, first we evaluate 1-2 then the result with +3
+            // it matters if there's another operand sandwiched between them
+            // 1-2*5+7 => (1-(2*5))+7 => (1-(10))+7 => (-9)+7 = -2      // first grouped together because of '<'
+            // vs
+            // 1-2*5+7 => 1-((2*5)+7) =>  1-((10)+7) => 1-(17) = -16    // second grouped together because of '<='
             isSufficient = newHead.Depth == nodeToAdd.Depth
-                ? newHead.Op.Precedent <= nodeToAdd.Op.Precedent
-                : newHead.Depth <= nodeToAdd.Depth;
+                ? newHead.Op.Precedent < nodeToAdd.Op.Precedent
+                : newHead.Depth < nodeToAdd.Depth;
 
             if (isSufficient)
             {
