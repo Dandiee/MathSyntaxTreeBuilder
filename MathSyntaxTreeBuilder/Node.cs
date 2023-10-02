@@ -1,24 +1,18 @@
 ﻿using System.Diagnostics;
+using Trees;
 
 namespace MathSyntaxTreeBuilder;
 
-public interface INode
+public abstract class Node : BaseNode<Node>
 {
-    public INode? Parent { get; }
-}
-
-public abstract class Node
-{
-    public NodeOp? Parent { get; set; }
     public abstract string BuildString();
     public abstract double Eval(Dictionary<string, double>? variables = null);
-    public readonly int Depth;
-    public readonly List<Node> Children = new();
+    public readonly int ScopeDepth;
     public abstract string Name { get; }
 
-    protected Node(int depth)
+    protected Node(int scopeDepth)
     {
-        Depth = depth;
+        ScopeDepth = scopeDepth;
     }
 }
 
@@ -32,8 +26,6 @@ public class NodeRoot : NodeOp
     public override double Eval(Dictionary<string, double>? variables = null) => Children[0].Eval(variables);
     public override string Name => "Identity";
 
-    
-
     public NodeRoot() : base(Op.Identity, -1)
     {
         LastOperation = this;
@@ -44,35 +36,25 @@ public class NodeRoot : NodeOp
 [DebuggerDisplay("{Op.Name}")]
 public class NodeOp : Node
 {
-   
-
     public readonly Op Op;
 
-    public NodeOp(Op op, int depth)
-     : base(depth)
-    {
-        Op = op;
-    }
+    public NodeOp(Op op, int scopeDepth) : base(scopeDepth) { Op = op; }
 
     public override string ToString() => Op.Name;
-
     public override string BuildString() => $"{Op.ToStringFunc(this)}";
     public override double Eval(Dictionary<string, double>? variables = null) => Op.EvalFunc(this, variables);
     public override string Name => Op.Name;
 
-    public void AddArg(string value)
-    {
-        Children.Add(new NodeArg(value, Depth + 1));
-    }
+    public void AddArg(string value) => Children.Add(new NodeArg(value, ScopeDepth + 1));
 
     public NodeOp AddOp(NodeOp nodeToAdd, string? argument)
     {
         // it's a more important node
         // the new node is *, the last is +, so the new must be deeper
         // add node to the current children
-        var nodeToAddIsMoreImportant = nodeToAdd.Depth == Depth
+        var nodeToAddIsMoreImportant = nodeToAdd.ScopeDepth == ScopeDepth
             ? nodeToAdd.Op.Precedent >= Op.Precedent
-            : nodeToAdd.Depth >= Depth;
+            : nodeToAdd.ScopeDepth >= ScopeDepth;
 
 
         if (nodeToAddIsMoreImportant)
@@ -120,11 +102,11 @@ public class NodeOp : Node
             // vs
             // 1-2*5+7 => 1-((2*5)+7) =>  1-((10)+7) => 1-(17) = -16    // second grouped together because of '<='
 
-            // the '<' for the depth is just as good as '<='
+            // the '<' for the scopeDepth is just as good as '<='
             // because when the  depths are equal, the depths wont matter anymore
-            isSufficient = newHead.Depth == nodeToAdd.Depth
+            isSufficient = newHead.ScopeDepth == nodeToAdd.ScopeDepth
                 ? newHead.Op.Precedent < nodeToAdd.Op.Precedent
-                : newHead.Depth < nodeToAdd.Depth;
+                : newHead.ScopeDepth < nodeToAdd.ScopeDepth;
 
             if (isSufficient)
             {
@@ -132,7 +114,9 @@ public class NodeOp : Node
             }
 
             oldChild = newHead;
-            newHead = newHead.Parent;
+            newHead = newHead.Parent as NodeOp;
+
+            if (newHead == null) throw new Exception("Syntax error");
         }
 
         // the found node must be re-parented

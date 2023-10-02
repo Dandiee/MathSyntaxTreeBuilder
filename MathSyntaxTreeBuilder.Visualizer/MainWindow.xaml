@@ -74,7 +74,7 @@
                     <TextBlock Grid.Row="0" Grid.Column="0" Text="Token"/>
                     <TextBlock Foreground="Yellow" Grid.Row="0" Grid.Column="1" x:Name="TokenTextBox"/>
 
-                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Depth"/>
+                    <TextBlock Grid.Row="1" Grid.Column="0" Text="ScopeDepth"/>
                     <TextBlock Foreground="Yellow" Grid.Row="1" Grid.Column="1" x:Name="DepthTextBox"/>
 
                     <TextBlock Grid.Row="2" Grid.Column="0" Text="Op"/>

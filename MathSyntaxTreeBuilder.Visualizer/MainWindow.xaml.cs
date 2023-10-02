@@ -163,7 +163,7 @@ public partial class MainWindow
 
         var b = new BuchheimWalker();
         var visualTree = ToVisualTree(root);
-        b.run(visualTree);
+        b.Run(visualTree);
 
         var q = new Queue<VisualNode>(new[] { visualTree });
         var mid2 = TreeCanvas.ActualWidth / 2;
@@ -382,7 +382,7 @@ public class VisualNode
             Margin = new Thickness(-5, -5, 0, 0),
             Child = new TextBlock
             {
-                Text = Node.Depth.ToString(),
+                Text = Node.ScopeDepth.ToString(),
                 Foreground = Brushes.Black,
                 VerticalAlignment = VerticalAlignment.Center,
                 HorizontalAlignment = HorizontalAlignment.Center,

@@ -20,14 +20,10 @@ public class MathSyntaxBuilder
                     node.AddArg(token);
                     token = string.Empty;
                     var namedOp = node;
-                    while (!(namedOp.Op.IsMultiVariableFunction && namedOp.Depth == depth - 1))
+                    while (!(namedOp.Op.IsMultiVariableFunction && namedOp.ScopeDepth == depth - 1))
                     {
-                        namedOp = namedOp.Parent;
-
-                        if (namedOp == null)
-                        {
-                            return root;
-                        }
+                        namedOp = namedOp.Parent as NodeOp;
+                        if (namedOp == null) throw new Exception("Syntax error");
                     }
                     node = namedOp;
                 }
@@ -44,6 +40,8 @@ public class MathSyntaxBuilder
                         node = node.AddOp(new NodeOp(op, depth), null);
                         token = string.Empty;
                     }
+                    else throw new Exception("Syntax error");
+
                     //else Debug.Assert(false, "Hidden multiplication is not supported yet.");
                     //TODO: it must be a hidden multiplication
                     // implicit multiplication is all over the place, examples:

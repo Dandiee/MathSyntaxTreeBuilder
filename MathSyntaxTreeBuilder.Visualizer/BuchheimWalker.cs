@@ -4,100 +4,97 @@ namespace MathSyntaxTreeBuilder
 {
     internal class BuchheimWalker
     {
-        private double[] m_depths = new double[10];
-        private int m_maxDepth = 0;
+        private double[] _mDepths = new double[10];
+        private int _mMaxDepth;
         public static double HorizontalMargin = 30;
         public static double VerticalMargin = 30;
 
 
-        private double spacing(VisualNode l, VisualNode r, bool siblings)
+        private double Spacing(VisualNode l, VisualNode r, bool siblings)
         {
             return 0.5*(l.Width + r.Width) + HorizontalMargin;
         }
 
-        private void updateDepths(int depth, VisualNode item)
+        private void UpdateDepths(int depth, VisualNode item)
         {
-            double d = (item.Height);
-            if (m_depths.Length <= depth)
+            // TODO: this 'd' doesn't do what you might think.
+            var d = item.Height;
+            if (_mDepths.Length <= depth)
             {
                 // ArrayLib.resize(m_depths, 3 * depth / 2);
-                m_depths = new double[3 * depth / 2]; 
+                _mDepths = new double[3 * depth / 2]; 
             }
 
-            m_depths[depth] = Math.Max(m_depths[depth], d);
-            m_maxDepth = Math.Max(m_maxDepth, depth);
+            _mDepths[depth] = Math.Max(_mDepths[depth], d);
+            _mMaxDepth = Math.Max(_mMaxDepth, depth);
         }
 
-        private void determineDepths()
+        private void DetermineDepths()
         {
-            for (int i = 1; i < m_maxDepth; ++i)
-                m_depths[i] += m_depths[i - 1];
-        }
-
-        // ------------------------------------------------------------------------
-
-        /**
-         * @see prefuse.action.Action#run(double)
-         */
-        public void run(VisualNode root)
-        {
-            // Arrays.fill(m_depths, 0);
-            for (var i = 0; i < m_depths.Length; i++)
+            for (var i = 1; i < _mMaxDepth; ++i)
             {
-                m_depths[i] = 0;
+                _mDepths[i] += _mDepths[i - 1];
+            }
+        }
+
+        public void Run(VisualNode root)
+        {
+            for (var i = 0; i < _mDepths.Length; i++)
+            {
+                _mDepths[i] = 0;
             }
 
-            m_maxDepth = 0;
+            _mMaxDepth = 0;
 
             // do first pass - compute breadth information, collect depth info
-            firstWalk(root, 0, 1);
+            FirstWalk(root, 0, 1);
 
             // sum up the depth info
-            determineDepths();
+            DetermineDepths();
 
             // do second pass - assign layout positions
-            secondWalk(root, null, -root.Prelim, 0);
+            SecondWalk(root, null, -root.Prelim, 0);
         }
 
 
-        private void firstWalk(VisualNode n, int num, int depth)
+        private void FirstWalk(VisualNode n, int num, int depth)
         {
             n.Number = num;
-            updateDepths(depth, n);
+            UpdateDepths(depth, n);
 
             if (n.Children.Count == 0) // is leaf
             {
-                VisualNode l = (VisualNode)n.PrevSibling;
+                var l = n.PrevSibling;
                 if (l == null)
                 {
                     n.Prelim = 0;
                 }
                 else
                 {
-                    n.Prelim = l.Prelim + spacing(l, n, true);
+                    n.Prelim = l.Prelim + Spacing(l, n, true);
                 }
             }
             else
             {
-                VisualNode leftMost = n.GetFirstChild();
-                VisualNode rightMost = n.GetLastChild();
-                VisualNode defaultAncestor = leftMost;
-                VisualNode c = leftMost;
-                for (int i = 0; c != null; ++i, c = (VisualNode)c.NextSibling)
+                var leftMost = n.GetFirstChild();
+                var rightMost = n.GetLastChild();
+                var defaultAncestor = leftMost;
+                var c = leftMost;
+                for (var i = 0; c != null; ++i, c = c.NextSibling)
                 {
-                    firstWalk(c, i, depth + 1);
-                    defaultAncestor = apportion(c, defaultAncestor);
+                    FirstWalk(c, i, depth + 1);
+                    defaultAncestor = Apportion(c, defaultAncestor);
                 }
 
-                executeShifts(n);
+                ExecuteShifts(n);
 
-                double midpoint = 0.5 *
-                    (leftMost.Prelim + rightMost.Prelim);
+                var midpoint = 0.5 *
+                               (leftMost.Prelim + rightMost.Prelim);
 
-                VisualNode left = (VisualNode)n.PrevSibling;
+                var left = n.PrevSibling;
                 if (left != null)
                 {
-                    n.Prelim = left.Prelim + spacing(left, n, true);
+                    n.Prelim = left.Prelim + Spacing(left, n, true);
                     n.Mod = n.Prelim - midpoint;
                 }
                 else
@@ -107,9 +104,9 @@ namespace MathSyntaxTreeBuilder
             }
         }
 
-        private VisualNode apportion(VisualNode v, VisualNode a)
+        private VisualNode Apportion(VisualNode v, VisualNode a)
         {
-            VisualNode w = (VisualNode)v.PrevSibling;
+            var w = v.PrevSibling;
             if (w != null)
             {
                 VisualNode vip, vim, vop, vom;
@@ -124,20 +121,20 @@ namespace MathSyntaxTreeBuilder
                 sim = vim.Mod;
                 som = vom.Mod;
 
-                VisualNode nr = nextRight(vim);
-                VisualNode nl = nextLeft(vip);
+                var nr = NextRight(vim);
+                var nl = NextLeft(vip);
                 while (nr != null && nl != null)
                 {
                     vim = nr;
                     vip = nl;
-                    vom = nextLeft(vom);
-                    vop = nextRight(vop);
+                    vom = NextLeft(vom);
+                    vop = NextRight(vop);
                     vop.Ancestor = v;
-                    double shift = (vim.Prelim + sim) -
-                        (vip.Prelim + sip) + spacing(vim, vip, false);
+                    var shift = vim.Prelim + sim -
+                        (vip.Prelim + sip) + Spacing(vim, vip, false);
                     if (shift > 0)
                     {
-                        moveSubtree(ancestor(vim, v, a), v, shift);
+                        MoveSubtree(Ancestor(vim, v, a), v, shift);
                         sip += shift;
                         sop += shift;
                     }
@@ -146,15 +143,15 @@ namespace MathSyntaxTreeBuilder
                     som += vom.Mod;
                     sop += vop.Mod;
 
-                    nr = nextRight(vim);
-                    nl = nextLeft(vip);
+                    nr = NextRight(vim);
+                    nl = NextLeft(vip);
                 }
-                if (nr != null && nextRight(vop) == null)
+                if (nr != null && NextRight(vop) == null)
                 {
                     vop.Thread = nr;
                     vop.Mod += sim - sop;
                 }
-                if (nl != null && nextLeft(vom) == null)
+                if (nl != null && NextLeft(vom) == null)
                 {
                     vom.Thread = nl;
                     vom.Mod += sip - som;
@@ -164,21 +161,21 @@ namespace MathSyntaxTreeBuilder
             return a;
         }
 
-        private VisualNode nextLeft(VisualNode n)
+        private VisualNode NextLeft(VisualNode n)
         {
             VisualNode c = null;
             c = n.GetFirstChild();
-            return (c != null ? c : n.Thread);
+            return c != null ? c : n.Thread;
         }
 
-        private VisualNode nextRight(VisualNode n)
+        private VisualNode NextRight(VisualNode n)
         {
             VisualNode c = null;
             c = n.GetLastChild();
-            return (c != null ? c : n.Thread);
+            return c != null ? c : n.Thread;
         }
 
-        private void moveSubtree(VisualNode wm, VisualNode wp, double shift)
+        private void MoveSubtree(VisualNode wm, VisualNode wp, double shift)
         {
             double subtrees = wp.Number - wm.Number;
             wp.Change -= shift / subtrees;
@@ -188,11 +185,11 @@ namespace MathSyntaxTreeBuilder
             wp.Mod += shift;
         }
 
-        private void executeShifts(VisualNode n)
+        private void ExecuteShifts(VisualNode n)
         {
             double shift = 0, change = 0;
-            for (VisualNode c = n.GetLastChild();
-                  c != null; c = (VisualNode)c.PrevSibling)
+            for (var c = n.GetLastChild();
+                  c != null; c = c.PrevSibling)
             {
                 c.Prelim += shift;
                 c.Mod += shift;
@@ -201,9 +198,9 @@ namespace MathSyntaxTreeBuilder
             }
         }
 
-        private VisualNode ancestor(VisualNode vim, VisualNode v, VisualNode a)
+        private VisualNode Ancestor(VisualNode vim, VisualNode v, VisualNode a)
         {
-            VisualNode p = (VisualNode)v.Parent;
+            var p = v.Parent;
             if (vim.Ancestor.Parent == p)
             {
                 return vim.Ancestor;
@@ -214,16 +211,16 @@ namespace MathSyntaxTreeBuilder
             }
         }
 
-        private void secondWalk(VisualNode n, VisualNode p, double m, int depth)
+        private void SecondWalk(VisualNode n, VisualNode p, double m, int depth)
         {
             n.X = n.Prelim + m;
-            n.Y = m_depths[depth] + depth * VerticalMargin;
+            n.Y = _mDepths[depth] + depth * VerticalMargin;
 
             depth += 1;
-            for (VisualNode c = n.GetFirstChild();
-                  c != null; c = (VisualNode)c.NextSibling)
+            for (var c = n.GetFirstChild();
+                  c != null; c = c.NextSibling)
             {
-                secondWalk(c, n, m + n.Mod, depth);
+                SecondWalk(c, n, m + n.Mod, depth);
             }
 
             n.Clear();
