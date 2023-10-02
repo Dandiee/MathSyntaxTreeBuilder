@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:MathSyntaxTreeBuilder.Visualizer"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="Dani f(x)" Height="450" Width="800">
     <Grid Background="#333">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -43,13 +43,23 @@
         </Grid>
         <Grid Grid.Row="2" Background="DarkSlateGray">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="130"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
 
-            <StackPanel TextBlock.Foreground="White" TextBlock.FontFamily="Consolas" TextBlock.FontSize="14" Margin="10">
-                <TextBlock Foreground="Yellow" x:Name="SubstringTextBox" Margin="0 0 0 5"/>
-                <Grid >
+            <TextBlock Foreground="Yellow" x:Name="SubstringTextBox" 
+                       Grid.ColumnSpan="2"
+                       Margin="10" FontSize="14" FontFamily="Consolas"/>
+
+            <StackPanel TextBlock.Foreground="White" 
+                        Grid.Column="0" Grid.Row="1"
+                        TextBlock.FontFamily="Consolas" TextBlock.FontSize="14" Margin="10">
+                
+                <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="70"/>
                         <ColumnDefinition Width="Auto"/>
@@ -75,14 +85,14 @@
                 </Grid>
 
             </StackPanel>
-            <Grid Grid.Column="1">
+            <Grid Grid.Column="1" Grid.Row="1">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition/>
                     <ColumnDefinition Width="5"/>
                     <ColumnDefinition/>
                 </Grid.ColumnDefinitions>
                 <GridSplitter Grid.Column="1" HorizontalAlignment="Stretch"  VerticalAlignment="Stretch"/>
-                <Canvas ClipToBounds="True" x:Name="TreeCanvas" Grid.Column="0"/>
+                <Canvas ClipToBounds="True" x:Name="TreeCanvas" Grid.Column="0" SizeChanged="TreeCanvas_OnSizeChanged"/>
 
                 <Grid Grid.Column="2">
                     <Grid.ColumnDefinitions>
@@ -96,6 +106,7 @@
                     <Slider x:Name="XFactorSlider" Grid.Column="1" Grid.Row="0" Margin="5" Minimum="1" Maximum="200" Value="100" ValueChanged="FactorSliderChanged"/>
                     <Slider x:Name="YFactorSlider" Grid.Column="0" Grid.Row="1" Orientation="Vertical" Margin="5" Minimum="1" Maximum="200" Value="100" ValueChanged="FactorSliderChanged"/>
                     <Canvas ClipToBounds="True" x:Name="FunctionCanvas" VerticalAlignment="Stretch" HorizontalAlignment="Stretch"
+                            
                             Grid.Row="1" Grid.Column="1">
                         <Line X1="0" X2="100" Y1="0" Y2="100" Stroke="Yellow"/>
                     </Canvas>
@@ -107,6 +118,7 @@
         </Grid>
 
         <TextBox x:Name="Result" Grid.Row="3" FontSize="18" Padding="10" IsReadOnly="True"/>
-        <TextBox x:Name="Eval" Grid.Row="4" FontSize="18" Padding="10" IsReadOnly="True"/>
+        <!--<TextBox x:Name="Eval" Grid.Row="4" FontSize="18" Padding="10" IsReadOnly="True"/>-->
+        <Slider x:Name="TestSlider" Grid.Row="4"  Minimum="0" Maximum="40" Value="30" ValueChanged="TestSlider_OnValueChanged"/>
     </Grid>
 </Window>

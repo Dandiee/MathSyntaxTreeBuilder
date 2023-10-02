@@ -96,6 +96,10 @@ public struct Op
         (node, vars) => Math.Sqrt(node.Children[0].Eval(vars)),
         node => $"sqrt({node.Children[0].BuildString()})", true);
 
+    public static readonly Op Clamp = new("clamp", 3, 1,
+        (node, vars) => Math.Clamp(node.Children[0].Eval(vars), node.Children[1].Eval(vars), node.Children[2].Eval(vars)),
+        node => $"clamp({node.Children[0].BuildString()})", true, true);
+
 
     public readonly int Precedent;
     public readonly string Name;

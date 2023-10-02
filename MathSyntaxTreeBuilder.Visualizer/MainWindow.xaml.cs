@@ -36,13 +36,11 @@ public partial class MainWindow
         }
         else
         {
-            var tree = MathSyntaxBuilder.GetSyntaxTree(InputTextBox.Text, (int)LengthLimitSlider.Value);
-            Draw(tree);
-
             try
             {
+                var tree = MathSyntaxBuilder.GetSyntaxTree(InputTextBox.Text, (int)LengthLimitSlider.Value);
+                Draw(tree);
 
-                
 
                 if (tree.Variables.Count > 0)
                 {
@@ -50,7 +48,7 @@ public partial class MainWindow
                 }
                 else
                 {
-                    Eval.Text = tree.Eval().ToString();
+                    //Eval.Text = tree.Eval().ToString();
                 }
 
                 Result.Text = tree.BuildString();
@@ -159,8 +157,6 @@ public partial class MainWindow
     private void Draw(NodeRoot root)
     {
         if (!isInited) return;
-
-
         
 
         Clear();
@@ -171,13 +167,13 @@ public partial class MainWindow
 
         var q = new Queue<VisualNode>(new[] { visualTree });
         var mid2 = TreeCanvas.ActualWidth / 2;
-        var width2 = 40;
+        
         while (q.Count > 0)
         {
             var current = q.Dequeue();
 
-            Canvas.SetLeft(current.Grid, current.X + mid2);
-            Canvas.SetTop(current.Grid, current.Y + 20);
+            Canvas.SetLeft(current.Grid, current.X + mid2 - (current.Width/ 2));
+            Canvas.SetTop(current.Grid, current.Y + BuchheimWalker.VerticalMargin);
 
             TreeCanvas.Children.Add(current.Grid);
 
@@ -187,11 +183,11 @@ public partial class MainWindow
 
                 var line = new Line
                 {
-                    X1 = current.X + width2 / 2 + mid2,
-                    X2 = child.X + width2 / 2 + mid2,
-                    Y1 = current.Y + width2 / 2 + 20,
-                    Y2 = child.Y + width2 / 2 + 20,
-                    Stroke = new SolidColorBrush(Colors.Yellow),
+                    X1 = current.X + current.Width * 0.5 + mid2 - (current.Width / 2),
+                    X2 = child.X + child.Width * 0.5 + mid2 - (child.Width / 2),
+                    Y1 = current.Y + current.Height * 0.5 + BuchheimWalker.VerticalMargin,
+                    Y2 = child.Y + child.Height * 0.5 + BuchheimWalker.VerticalMargin,
+                    Stroke =Brushes.Yellow,
 
                 };
                 TreeCanvas.Children.Add(line);
@@ -207,90 +203,8 @@ public partial class MainWindow
         LastOpTextBox.Text = root.LastOperation.Op.Name;
         SubstringTextBox.Text = InputTextBox.Text.Substring(0, (int)LengthLimitSlider.Value);
         VariablesTextBox.Text = string.Join(", ", root.Variables);
-        Eval.Text = string.Empty;
+        //Eval.Text = string.Empty;
         Result.Text = string.Empty;
-
-        return;
-
-        var q1 = new Queue<(Node, int)>(new (Node, int)[] { new(root, 0) });
-        var maxDepth = 0;
-        while (q1.Count > 0)
-        {
-            var current = q1.Dequeue();
-            if (maxDepth < current.Item2) maxDepth = current.Item2;
-
-            
-
-            foreach (var chil in current.Item1.Children)
-            {
-                q1.Enqueue(new(chil, current.Item2 + 1));
-            }
-        }
-
-
-        Title = maxDepth.ToString();
-
-
-        var visualRoot = new VisualNode(root, null, maxDepth, 40);
-        var queue = new Queue<VisualNode>(new[] { visualRoot });
-        var width = 40d;
-
-        var mid = TreeCanvas.ActualWidth / 2;
-        var maximumWidth = Math.Pow(2, maxDepth - 1) * width;
-
-        while (queue.Count > 0)
-        {
-            var current = queue.Dequeue();
-
-            if (current.Parent == null)
-            {
-                current.HorizontalOffset = mid;
-                current.VerticalOffset = 20;
-            }
-            else
-            {
-                if (current.Parent.Children.Count == 1)
-                {
-                    current.HorizontalOffset = current.Parent.HorizontalOffset;
-                }
-                else
-                {
-                    var isLeft = current.Parent.Children[0].Node == current.Node;
-                    var step = maximumWidth / Math.Pow(2, current.Depth);
-
-                    current.HorizontalOffset = isLeft
-                        ? current.Parent.HorizontalOffset - step
-                        : current.Parent.HorizontalOffset + step;
-                }
-
-                current.VerticalOffset = current.Parent.VerticalOffset + 80;
-            }
-
-            Canvas.SetLeft(current.Grid, current.HorizontalOffset);
-            Canvas.SetTop(current.Grid, current.VerticalOffset);
-
-            if (current.Parent != null)
-            {
-                var line = new Line
-                {
-                    X1 = current.Parent.HorizontalOffset + width / 2,
-                    X2 = current.HorizontalOffset + width / 2,
-                    Y1 = current.Parent.VerticalOffset + width / 2,
-                    Y2 = current.VerticalOffset + width / 2,
-                    Stroke = new SolidColorBrush(Colors.Yellow),
-
-                };
-                TreeCanvas.Children.Add(line);
-                Panel.SetZIndex(line, -1);
-            }
-
-            TreeCanvas.Children.Add(current.Grid);
-
-            foreach (var child in current.Children)
-            {
-                queue.Enqueue(child);
-            }
-        }
     }
 
     private void Clear()
@@ -310,11 +224,12 @@ public partial class MainWindow
     {
         try
         {
+
             var tree = MathSyntaxBuilder.GetSyntaxTree(InputTextBox.Text, (int)LengthLimitSlider.Value);
             Draw(tree);
-
             if (tree.Variables.Count > 0)
             {
+                
                 DrawFunction(tree);
             }
         }
@@ -323,13 +238,50 @@ public partial class MainWindow
         }
 
     }
+
+    private void TreeCanvas_OnSizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        var halfDelta = (e.NewSize.Width - e.PreviousSize.Width) / 2;
+
+        foreach (var child in TreeCanvas.Children.OfType<UIElement>())
+        {
+            if (child is Line line)
+            {
+                line.X2 += halfDelta;
+                line.X1 += halfDelta;
+            }
+            else
+            {
+                var prevLeft = Canvas.GetLeft(child);
+                Canvas.SetLeft(child, prevLeft + halfDelta);
+            }
+        }
+    }
+
+    private void TestSlider_OnValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        try
+        {
+            BuchheimWalker.HorizontalMargin = TestSlider.Value;
+            var tree = MathSyntaxBuilder.GetSyntaxTree(InputTextBox.Text, (int)LengthLimitSlider.Value);
+            Draw(tree);
+            if (tree.Variables.Count > 0)
+            {
+
+                DrawFunction(tree);
+            }
+        }
+        catch
+        {
+        }
+    }
 }
 
 public class VisualNode
 {
     // new shit
-    public double Width = 40;
-    public double Height = 40;
+    public double Width;
+    public double Height;
     public double Prelim = 0; // ???
     public int Number = 0; // ???
     public double Change = 0; // ???
@@ -385,19 +337,19 @@ public class VisualNode
         Node = node;
         Parent = parent;
         Ancestor = parent;
+        Width = 40 + (node.Name.Length - 1) * 10;
+        Height = 40;
 
-        Text = node is NodeOp op
-            ? op.Op.Name
-            : (node as NodeArg).Value;
+        Text = node.Name;
 
         Border = new Border
         {
-            Width = 40,
-            Height = 40,
+            Width = Width,
+            Height = Height,
             CornerRadius = new CornerRadius(20),
             Background = Node is NodeOp ?
                 Node is NodeRoot
-                    ? Brushes.Black
+                    ? Brushes.DeepSkyBlue
                     : Brushes.White
                 : Brushes.DarkGray,
             HorizontalAlignment = HorizontalAlignment.Center,
@@ -431,75 +383,6 @@ public class VisualNode
             Child = new TextBlock
             {
                 Text = Node.Depth.ToString(),
-                Foreground = Brushes.Black,
-                VerticalAlignment = VerticalAlignment.Center,
-                HorizontalAlignment = HorizontalAlignment.Center,
-                FontFamily = new FontFamily("Consolas"),
-                FontSize = 9
-            }
-        });
-    }
-
-    public VisualNode(Node node, VisualNode? parent = null, int indexInRow = 0, int depth = 0)
-    {
-        Node = node;
-        IndexInRow = indexInRow;
-        Depth = depth;
-        Parent = parent;
-
-        Text = node is NodeOp op
-            ? op.Op.Name
-            : (node as NodeArg).Value;
-
-        for (var i = 0; i < node.Children.Count; i++)
-        {
-            var child = node.Children[i];
-            var index = i == 0 ? -1 : 1;
-            Children.Add(new VisualNode(child, this, index, depth + 1));
-        }
-
-
-        Border = new Border
-        {
-            Width = 40,
-            Height = 40,
-            CornerRadius = new CornerRadius(20),
-            Background = node is NodeOp ?
-                node is NodeRoot
-                    ? Brushes.Black
-                    : Brushes.White
-                : Brushes.DarkGray,
-            HorizontalAlignment = HorizontalAlignment.Center,
-            Margin = new Thickness(0),
-            BorderBrush = Brushes.Yellow,
-            BorderThickness = new Thickness(2),
-            Child = new TextBlock
-            {
-                Text = Text,
-                TextAlignment = TextAlignment.Center,
-                VerticalAlignment = VerticalAlignment.Center,
-                HorizontalAlignment = HorizontalAlignment.Center,
-                FontSize = 18,
-                FontWeight = FontWeights.Bold
-            }
-        };
-
-        Grid = new Grid();
-        Grid.Children.Add(Border);
-        Grid.Children.Add(new Border
-        {
-            Width = 16,
-            Height = 16,
-            CornerRadius = new CornerRadius(8),
-            BorderBrush = Brushes.Black,
-            Background = Brushes.Yellow,
-            BorderThickness = new Thickness(1),
-            HorizontalAlignment = HorizontalAlignment.Left,
-            VerticalAlignment = VerticalAlignment.Top,
-            Margin = new Thickness(-5, -5, 0, 0),
-            Child = new TextBlock
-            {
-                Text = node.Depth.ToString(),
                 Foreground = Brushes.Black,
                 VerticalAlignment = VerticalAlignment.Center,
                 HorizontalAlignment = HorizontalAlignment.Center,

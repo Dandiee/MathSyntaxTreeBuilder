@@ -9,6 +9,7 @@ public abstract class Node
     public abstract double Eval(Dictionary<string, double>? variables = null);
     public readonly int Depth;
     public readonly List<Node> Children = new();
+    public abstract string Name { get; }
 
     protected Node(int depth)
     {
@@ -24,6 +25,7 @@ public class NodeRoot : NodeOp
     public HashSet<string> Variables { get; } = new(StringComparer.OrdinalIgnoreCase);
     public override string BuildString() => Children[0].BuildString();
     public override double Eval(Dictionary<string, double>? variables = null) => Children[0].Eval(variables);
+    public override string Name => "Identity";
 
     public NodeRoot() : base(Op.Identity, -1)
     {
@@ -49,6 +51,7 @@ public class NodeOp : Node
 
     public override string BuildString() => $"{Op.ToStringFunc(this)}";
     public override double Eval(Dictionary<string, double>? variables = null) => Op.EvalFunc(this, variables);
+    public override string Name => Op.Name + "AAAAAAAAA";
 
     public void AddArg(string value)
     {
@@ -181,4 +184,6 @@ public class NodeArg : Node
 
     public override double Eval(Dictionary<string, double>? variables = null)
         => IsNumerical ? DoubleValue : variables[VariableName];
+
+    public override string Name => Value;
 }

@@ -6,14 +6,13 @@ namespace MathSyntaxTreeBuilder
     {
         private double[] m_depths = new double[10];
         private int m_maxDepth = 0;
-        public double HorizontalMargin = 20;
-        public double VerticalMargin = 20;
+        public static double HorizontalMargin = 30;
+        public static double VerticalMargin = 30;
 
 
         private double spacing(VisualNode l, VisualNode r, bool siblings)
         {
-            return 0.5 *
-                (l.Width + r.Width) + HorizontalMargin;
+            return 0.5*(l.Width + r.Width) + HorizontalMargin;
         }
 
         private void updateDepths(int depth, VisualNode item)
