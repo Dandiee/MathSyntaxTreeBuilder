@@ -43,6 +43,8 @@ public class MathSyntaxBuilder
                     }
                     //else Debug.Assert(false, "Hidden multiplication is not supported yet.");
                     //TODO: it must be a hidden multiplication
+                    // implicit multiplication is all over the place, examples:
+                    // 2x, (1+2)(3+4), -cos(1), -5sin(1), even 1--1 can be a impl mul
                     //{ 
                     //
                     //    var mulArg = token == "-"

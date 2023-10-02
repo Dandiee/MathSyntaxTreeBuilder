@@ -83,9 +83,24 @@
                 </Grid.ColumnDefinitions>
                 <GridSplitter Grid.Column="1" HorizontalAlignment="Stretch"  VerticalAlignment="Stretch"/>
                 <Canvas ClipToBounds="True" x:Name="TreeCanvas" Grid.Column="0"/>
-                <Canvas ClipToBounds="True" x:Name="FunctionCanvas" Grid.Column="2" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
-                    <Line X1="0" X2="100" Y1="0" Y2="100" Stroke="Yellow"/>
-                </Canvas>
+
+                <Grid Grid.Column="2">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <Slider x:Name="XFactorSlider" Grid.Column="1" Grid.Row="0" Margin="5" Minimum="1" Maximum="200" Value="100" ValueChanged="FactorSliderChanged"/>
+                    <Slider x:Name="YFactorSlider" Grid.Column="0" Grid.Row="1" Orientation="Vertical" Margin="5" Minimum="1" Maximum="200" Value="100" ValueChanged="FactorSliderChanged"/>
+                    <Canvas ClipToBounds="True" x:Name="FunctionCanvas" VerticalAlignment="Stretch" HorizontalAlignment="Stretch"
+                            Grid.Row="1" Grid.Column="1">
+                        <Line X1="0" X2="100" Y1="0" Y2="100" Stroke="Yellow"/>
+                    </Canvas>
+                </Grid>
+                
 
             </Grid>
 
