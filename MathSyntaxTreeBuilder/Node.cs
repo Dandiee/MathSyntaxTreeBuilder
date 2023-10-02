@@ -2,9 +2,14 @@
 
 namespace MathSyntaxTreeBuilder;
 
+public interface INode
+{
+    public INode? Parent { get; }
+}
+
 public abstract class Node
 {
-    public Node? Parent { get; set; }
+    public NodeOp? Parent { get; set; }
     public abstract string BuildString();
     public abstract double Eval(Dictionary<string, double>? variables = null);
     public readonly int Depth;
@@ -26,6 +31,8 @@ public class NodeRoot : NodeOp
     public override string BuildString() => Children[0].BuildString();
     public override double Eval(Dictionary<string, double>? variables = null) => Children[0].Eval(variables);
     public override string Name => "Identity";
+
+    
 
     public NodeRoot() : base(Op.Identity, -1)
     {
@@ -51,7 +58,7 @@ public class NodeOp : Node
 
     public override string BuildString() => $"{Op.ToStringFunc(this)}";
     public override double Eval(Dictionary<string, double>? variables = null) => Op.EvalFunc(this, variables);
-    public override string Name => Op.Name + "AAAAAAAAA";
+    public override string Name => Op.Name;
 
     public void AddArg(string value)
     {
@@ -125,7 +132,7 @@ public class NodeOp : Node
             }
 
             oldChild = newHead;
-            newHead = newHead.Parent as NodeOp;
+            newHead = newHead.Parent;
         }
 
         // the found node must be re-parented

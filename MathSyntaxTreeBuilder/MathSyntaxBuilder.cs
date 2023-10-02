@@ -1,6 +1,4 @@
-﻿using System.Diagnostics;
-
-namespace MathSyntaxTreeBuilder;
+﻿namespace MathSyntaxTreeBuilder;
 
 public class MathSyntaxBuilder
 {
@@ -24,7 +22,12 @@ public class MathSyntaxBuilder
                     var namedOp = node;
                     while (!(namedOp.Op.IsMultiVariableFunction && namedOp.Depth == depth - 1))
                     {
-                        namedOp = (NodeOp)namedOp.Parent;
+                        namedOp = namedOp.Parent;
+
+                        if (namedOp == null)
+                        {
+                            return root;
+                        }
                     }
                     node = namedOp;
                 }
@@ -58,7 +61,8 @@ public class MathSyntaxBuilder
 
                 depth++;
             }
-            else if (Op.ByKeys.TryGetValue(c.ToString(), out var op)) // character ops: '+', '-', '/', '*', '^'
+            // character ops: '+', '-', '/', '*', '^'
+            else if (Op.ByKeys.TryGetValue(c.ToString(), out var op))
             {
                 // it's a negative token not an operation
                 if (op.Equals(Op.Subtract) && token == string.Empty)
