@@ -1,8 +1,7 @@
-﻿
-using System.Drawing;
+﻿namespace Trees;
 
-namespace Trees;
 public sealed class BuchheimWalker<TNode>
+    where TNode : PayloadNode<TNode, BuchheimVisualNodeDescription<TNode>>
 {
     private double[] _mDepths = new double[10];
     private int _mMaxDepth;
@@ -10,13 +9,15 @@ public sealed class BuchheimWalker<TNode>
     public static double VerticalMargin = 30;
 
 
-    private double Spacing(BuchheimNode<TNode> l, BuchheimNode<TNode> r, bool siblings) 
-        => 0.5 * (l.Width + r.Width) + HorizontalMargin;
+    private double Spacing(TNode l, TNode r, bool siblings)
+    {
+        return 0.5 * (l.Payload.Width + r.Payload.Width) + HorizontalMargin;
+    }
 
-    private void UpdateDepths(int depth, BuchheimNode<TNode> item)
+    private void UpdateDepths(int depth, TNode item)
     {
         // TODO: this 'd' doesn't do what you might think.
-        var d = item.Height;
+        var d = item.Payload.Height;
         if (_mDepths.Length <= depth)
         {
             // ArrayLib.resize(m_depths, 3 * depth / 2);
@@ -35,7 +36,7 @@ public sealed class BuchheimWalker<TNode>
         }
     }
 
-    public void Run(BuchheimNode<TNode> root)
+    public void Run(TNode root)
     {
         for (var i = 0; i < _mDepths.Length; i++)
         {
@@ -51,13 +52,13 @@ public sealed class BuchheimWalker<TNode>
         DetermineDepths();
 
         // do second pass - assign layout positions
-        SecondWalk(root, null, -root.Prelim, 0);
+        SecondWalk(root, null, -root.Payload.Prelim, 0);
     }
 
 
-    private void FirstWalk(BuchheimNode<TNode> n, int num, int depth)
+    private void FirstWalk(TNode n, int num, int depth)
     {
-        n.Number = num;
+        n.Payload.Number = num;
         UpdateDepths(depth, n);
 
         if (n.Children.Count == 0) // is leaf
@@ -65,11 +66,11 @@ public sealed class BuchheimWalker<TNode>
             var l = n.GetPrevSibling();
             if (l == null)
             {
-                n.Prelim = 0;
+                n.Payload.Prelim = 0;
             }
             else
             {
-                n.Prelim = l.Prelim + Spacing(l, n, true);
+                n.Payload.Prelim = l.Payload.Prelim + Spacing(l, n, true);
             }
         }
         else
@@ -87,37 +88,37 @@ public sealed class BuchheimWalker<TNode>
             ExecuteShifts(n);
 
             var midpoint = 0.5 *
-                           (leftMost.Prelim + rightMost.Prelim);
+                           (leftMost.Payload.Prelim + rightMost.Payload.Prelim);
 
             var left = n.GetPrevSibling();
             if (left != null)
             {
-                n.Prelim = left.Prelim + Spacing(left, n, true);
-                n.Mod = n.Prelim - midpoint;
+                n.Payload.Prelim = left.Payload.Prelim + Spacing(left, n, true);
+                n.Payload.Mod = n.Payload.Prelim - midpoint;
             }
             else
             {
-                n.Prelim = midpoint;
+                n.Payload.Prelim = midpoint;
             }
         }
     }
 
-    private BuchheimNode<TNode> Apportion(BuchheimNode<TNode> v, BuchheimNode<TNode> a)
+    private TNode Apportion(TNode v, TNode a)
     {
         var w = v.GetPrevSibling();
         if (w != null)
         {
-            BuchheimNode<TNode> vip, vim, vop, vom;
+            TNode vip, vim, vop, vom;
             double sip, sim, sop, som;
 
             vip = vop = v;
             vim = w;
-            vom = vip.Parent!.Children[0];
+            vom = vip.Parent.GetFirstChild();
 
-            sip = vip.Mod;
-            sop = vop.Mod;
-            sim = vim.Mod;
-            som = vom.Mod;
+            sip = vip.Payload.Mod;
+            sop = vop.Payload.Mod;
+            sim = vim.Payload.Mod;
+            som = vom.Payload.Mod;
 
             var nr = NextRight(vim);
             var nl = NextLeft(vip);
@@ -127,98 +128,82 @@ public sealed class BuchheimWalker<TNode>
                 vip = nl;
                 vom = NextLeft(vom);
                 vop = NextRight(vop);
-                vop.Ancestor = v;
-                var shift = vim.Prelim + sim -
-                    (vip.Prelim + sip) + Spacing(vim, vip, false);
+                vop.Payload.Ancestor = v;
+                var shift = vim.Payload.Prelim + sim -
+                    (vip.Payload.Prelim + sip) + Spacing(vim, vip, false);
                 if (shift > 0)
                 {
                     MoveSubtree(Ancestor(vim, v, a), v, shift);
                     sip += shift;
                     sop += shift;
                 }
-                sim += vim.Mod;
-                sip += vip.Mod;
-                som += vom.Mod;
-                sop += vop.Mod;
+                sim += vim.Payload.Mod;
+                sip += vip.Payload.Mod;
+                som += vom.Payload.Mod;
+                sop += vop.Payload.Mod;
 
                 nr = NextRight(vim);
                 nl = NextLeft(vip);
             }
             if (nr != null && NextRight(vop) == null)
             {
-                vop.Thread = nr;
-                vop.Mod += sim - sop;
+                vop.Payload.Thread = nr;
+                vop.Payload.Mod += sim - sop;
             }
             if (nl != null && NextLeft(vom) == null)
             {
-                vom.Thread = nl;
-                vom.Mod += sip - som;
+                vom.Payload.Thread = nl;
+                vom.Payload.Mod += sip - som;
                 a = v;
             }
         }
         return a;
     }
 
-    private BuchheimNode<TNode> NextLeft(BuchheimNode<TNode> n)
+    private TNode NextLeft(TNode n) => n.GetFirstChild() ?? n.Payload.Thread;
+
+    private TNode NextRight(TNode n) => n.GetLastChild() ?? n.Payload.Thread;
+
+    private void MoveSubtree(TNode wm, TNode wp, double shift)
     {
-        BuchheimNode<TNode> c = null;
-        c = n.GetFirstChild();
-        return c != null ? c : n.Thread;
+        double subtrees = wp.Payload.Number - wm.Payload.Number;
+        wp.Payload.Change -= shift / subtrees;
+        wp.Payload.Shift += shift;
+        wm.Payload.Change += shift / subtrees;
+        wp.Payload.Prelim += shift;
+        wp.Payload.Mod += shift;
     }
 
-    private BuchheimNode<TNode> NextRight(BuchheimNode<TNode> n)
-    {
-        BuchheimNode<TNode> c = null;
-        c = n.GetLastChild();
-        return c != null ? c : n.Thread;
-    }
-
-    private void MoveSubtree(BuchheimNode<TNode> wm, BuchheimNode<TNode> wp, double shift)
-    {
-        double subtrees = wp.Number - wm.Number;
-        wp.Change -= shift / subtrees;
-        wp.Shift += shift;
-        wm.Change += shift / subtrees;
-        wp.Prelim += shift;
-        wp.Mod += shift;
-    }
-
-    private void ExecuteShifts(BuchheimNode<TNode> n)
+    private void ExecuteShifts(TNode n)
     {
         double shift = 0, change = 0;
         for (var c = n.GetLastChild();
               c != null; c = c.GetPrevSibling())
         {
-            c.Prelim += shift;
-            c.Mod += shift;
-            change += c.Change;
-            shift += c.Shift + change;
+            c.Payload.Prelim += shift;
+            c.Payload.Mod += shift;
+            change += c.Payload.Change;
+            shift += c.Payload.Shift + change;
         }
     }
 
-    private BuchheimNode<TNode> Ancestor(BuchheimNode<TNode> vim, BuchheimNode<TNode> v, BuchheimNode<TNode> a)
-    {
-        var p = v.Parent;
-        if (vim.Ancestor.Parent == p)
-        {
-            return vim.Ancestor;
-        }
-        else
-        {
-            return a;
-        }
-    }
+    private TNode Ancestor(TNode vim, TNode v, TNode a)
+        => vim.Payload.Ancestor.Parent == v.Parent
+            ? vim.Payload.Ancestor
+            : a;
 
-    private void SecondWalk(BuchheimNode<TNode> n, BuchheimNode<TNode> p, double m, int depth)
+    private void SecondWalk(TNode n, TNode p, double m, int depth)
     {
-        n.X  = n.Prelim + m;
-        n.Y = _mDepths[depth] + depth * VerticalMargin;
+        n.Payload.X = n.Payload.Prelim + m;
+        n.Payload.Y = _mDepths[depth] + depth * VerticalMargin;
 
         depth += 1;
         for (var c = n.GetFirstChild();
               c != null; c = c.GetNextSibling())
         {
-            SecondWalk(c, n, m + n.Mod, depth);
+            SecondWalk(c, n, m + n.Payload.Mod, depth);
         }
+
+        //n.Clear();
     }
 }

@@ -6,7 +6,7 @@ using System.Windows.Media;
 using System.Windows.Media.Media3D;
 using System.Windows.Shapes;
 using System.Xml.Linq;
-
+using Trees;
 namespace MathSyntaxTreeBuilder.Visualizer;
 
 public partial class MainWindow
@@ -161,11 +161,15 @@ public partial class MainWindow
 
         Clear();
 
-        var b = new BuchheimWalker();
-        var visualTree = ToVisualTree(root);
-        b.Run(visualTree);
+        var visualTree = root.ToVisual<Node>();
 
-        var q = new Queue<VisualNode>(new[] { visualTree });
+        foreach (var node in visualTree.Traversal())
+        {
+
+        }
+       
+
+        var q = new Queue<IVisualNode>(new[] { visualTree });
         var mid2 = TreeCanvas.ActualWidth / 2;
         
         while (q.Count > 0)

@@ -10,7 +10,8 @@ public abstract class Node : BaseNode<Node>
     public readonly int ScopeDepth;
     public abstract string Name { get; }
 
-    protected Node(int scopeDepth)
+    protected Node(Node? parent, int scopeDepth)
+        : base(parent)
     {
         ScopeDepth = scopeDepth;
     }
@@ -38,14 +39,14 @@ public class NodeOp : Node
 {
     public readonly Op Op;
 
-    public NodeOp(Op op, int scopeDepth) : base(scopeDepth) { Op = op; }
+    public NodeOp(Op op, int scopeDepth) : base(null, scopeDepth) { Op = op; }
 
     public override string ToString() => Op.Name;
     public override string BuildString() => $"{Op.ToStringFunc(this)}";
     public override double Eval(Dictionary<string, double>? variables = null) => Op.EvalFunc(this, variables);
     public override string Name => Op.Name;
 
-    public void AddArg(string value) => Children.Add(new NodeArg(value, ScopeDepth + 1));
+    public void AddArg(string value) => Children.Add(new NodeArg(this, value, ScopeDepth + 1));
 
     public NodeOp AddOp(NodeOp nodeToAdd, string? argument)
     {
@@ -147,8 +148,8 @@ public class NodeArg : Node
     public readonly string VariableName;
     public readonly bool IsNumerical;
 
-    public NodeArg(string value, int depth)
-        : base(depth)
+    public NodeArg(NodeOp parent, string value, int depth)
+        : base(parent, depth)
     {
         Value = value;
 
