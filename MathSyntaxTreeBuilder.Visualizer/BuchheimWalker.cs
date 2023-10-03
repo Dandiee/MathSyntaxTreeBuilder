@@ -2,13 +2,28 @@
 
 namespace MathSyntaxTreeBuilder
 {
+    public class Meta
+    {
+        public double Width;
+        public double Height;
+        public double Prelim = 0; // ???
+        public int Number = 0; // ???
+        public double Change = 0; // ???
+        public double Shift = 0; // ???
+        public double Mod = 0; // ???
+        public double X = 0; // ???
+        public double Y = 0; // ???
+        public VisualNode? Thread = null; // ???
+        public VisualNode? Ancestor = null; // ???
+    }
+
     internal class BuchheimWalker
     {
         private double[] _mDepths = new double[10];
         private int _mMaxDepth;
         public static double HorizontalMargin = 30;
         public static double VerticalMargin = 30;
-
+        private Dictionary<VisualNode, Meta> _metas;
 
         private double Spacing(VisualNode l, VisualNode r, bool siblings)
         {
@@ -39,6 +54,23 @@ namespace MathSyntaxTreeBuilder
 
         public void Run(VisualNode root)
         {
+            _metas = new Dictionary<VisualNode, Meta>();
+            var queue = new Queue<VisualNode>(new[] { root });
+            while (queue.Count > 0)
+            {
+                var current = queue.Dequeue();
+                _metas[current] = new Meta
+                {
+                    Ancestor = current.Parent
+                };
+                foreach (var child in current.Children)
+                {
+                    queue.Enqueue(child);
+                }
+            }
+
+
+
             for (var i = 0; i < _mDepths.Length; i++)
             {
                 _mDepths[i] = 0;
@@ -129,7 +161,7 @@ namespace MathSyntaxTreeBuilder
                     vip = nl;
                     vom = NextLeft(vom);
                     vop = NextRight(vop);
-                    vop.Ancestor = v;
+                    _metas[vop].Ancestor = v;
                     var shift = vim.Prelim + sim -
                         (vip.Prelim + sip) + Spacing(vim, vip, false);
                     if (shift > 0)
@@ -148,12 +180,12 @@ namespace MathSyntaxTreeBuilder
                 }
                 if (nr != null && NextRight(vop) == null)
                 {
-                    vop.Thread = nr;
+                    _metas[vop].Thread = nr;
                     vop.Mod += sim - sop;
                 }
                 if (nl != null && NextLeft(vom) == null)
                 {
-                    vom.Thread = nl;
+                    _metas[vom].Thread = nl;
                     vom.Mod += sip - som;
                     a = v;
                 }
@@ -165,14 +197,14 @@ namespace MathSyntaxTreeBuilder
         {
             VisualNode c = null;
             c = n.GetFirstChild();
-            return c != null ? c : n.Thread;
+            return c != null ? c : _metas[n].Thread;
         }
 
         private VisualNode NextRight(VisualNode n)
         {
             VisualNode c = null;
             c = n.GetLastChild();
-            return c != null ? c : n.Thread;
+            return c != null ? c : _metas[n].Thread;
         }
 
         private void MoveSubtree(VisualNode wm, VisualNode wp, double shift)
@@ -201,9 +233,9 @@ namespace MathSyntaxTreeBuilder
         private VisualNode Ancestor(VisualNode vim, VisualNode v, VisualNode a)
         {
             var p = v.Parent;
-            if (vim.Ancestor.Parent == p)
+            if (_metas[vim].Ancestor.Parent == p)
             {
-                return vim.Ancestor;
+                return _metas[vim].Ancestor;
             }
             else
             {

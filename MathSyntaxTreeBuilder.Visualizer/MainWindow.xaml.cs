@@ -289,8 +289,8 @@ public class VisualNode
     public double Mod = 0; // ???
     public double X = 0; // ???
     public double Y = 0; // ???
-    public VisualNode? Thread = null; // ???
-    public VisualNode? Ancestor = null; // ???
+    //public VisualNode? Thread = null; // ???
+    //public VisualNode? Ancestor = null; // ???
 
     public void Clear() {}
     public VisualNode? GetLastChild() => Children.Count == 0 ? null : Children[^1];
@@ -336,7 +336,7 @@ public class VisualNode
     {
         Node = node;
         Parent = parent;
-        Ancestor = parent;
+        //Ancestor = parent;
         Width = 40 + (node.Name.Length - 1) * 10;
         Height = 40;
 
