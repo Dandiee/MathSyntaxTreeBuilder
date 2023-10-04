@@ -5,7 +5,7 @@ namespace MathSyntaxTreeBuilder;
 
 public abstract class Node : BaseNode<Node>
 {
-    public abstract string BuildString();
+    public abstract string BuildExpression();
     public abstract double Eval(Dictionary<string, double>? variables = null);
     public readonly int ScopeDepth;
     public abstract string Name { get; }
@@ -23,7 +23,7 @@ public class NodeRoot : NodeOp
     public NodeOp LastOperation { get; set; }
     public HashSet<string> Variables { get; } = new(StringComparer.OrdinalIgnoreCase);
     public string VariablesText => string.Join(", ", Variables);
-    public override string BuildString() => Children[0].BuildString();
+    public override string BuildExpression() => Children[0].BuildExpression();
     public override double Eval(Dictionary<string, double>? variables = null) => Children[0].Eval(variables);
     public override string Name => "Identity";
 
@@ -42,7 +42,7 @@ public class NodeOp : Node
     public NodeOp(Op op, int scopeDepth) : base(scopeDepth) { Op = op; }
 
     public override string ToString() => Op.Name;
-    public override string BuildString() => $"{Op.ToStringFunc(this)}";
+    public override string BuildExpression() => $"{Op.ToStringFunc(this)}";
     public override double Eval(Dictionary<string, double>? variables = null) => Op.EvalFunc(this, variables);
     public override string Name => Op.Name;
 
@@ -147,7 +147,7 @@ public class NodeArg : Node
     public readonly double DoubleValue;
     public readonly string VariableName;
     public readonly bool IsNumerical;
-    public double Delta;
+    public double Delta = 0;
 
     public NodeArg(string value, int depth)
         : base(depth)
@@ -174,7 +174,7 @@ public class NodeArg : Node
     }
 
     public override string ToString() => Value;
-    public override string BuildString() => Value;
+    public override string BuildExpression() => Value;
 
     public override double Eval(Dictionary<string, double>? variables = null)
         => IsNumerical ? DoubleValue + Delta : variables[VariableName];

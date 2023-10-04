@@ -154,8 +154,8 @@
 
         <!-- Footer -->
         <StackPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3">
-            <TextBox FontSize="18" Padding="10" IsReadOnly="True"/>
-            <TextBox FontSize="18" Padding="10" IsReadOnly="True"/>
+            <TextBox FontSize="18" Padding="10" IsReadOnly="True" Text="{Binding OutputExpression}"/>
+            <TextBox FontSize="18" Padding="10" IsReadOnly="True" Text="{Binding Result}"/>
         </StackPanel>
 
 

@@ -62,7 +62,7 @@ public class Program
     public static void Test(string input, string expectedOutput = null, double? expectedEval = null)
     {
         var result = MathSyntaxBuilder.GetSyntaxTree(input);
-        var output = result.BuildString();
+        var output = result.BuildExpression();
 
         if (expectedOutput != null)
         {
