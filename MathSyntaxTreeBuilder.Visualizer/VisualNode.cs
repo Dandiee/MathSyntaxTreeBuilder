@@ -10,45 +10,47 @@ public class VisualNode
 {
     private readonly Canvas _canvas;
 
-    // new shit
     public double Width;
     public double Height;
-    public double Prelim = 0; // ???
-    public int Number = 0; // ???
-    public double Change = 0; // ???
-    public double Shift = 0; // ???
-    public double Mod = 0; // ???
-    public double X = 0; // ???
-    public double Y = 0; // ???
-    //public VisualNode? Thread = null; // ???
-    //public VisualNode? Ancestor = null; // ???
+    public double Prelim;
+    public int Number;
+    public double Change;
+    public double Shift;
+    public double Mod;
+    public double X = 0;
+    public double Y = 0;
+    public VisualNode? Thread;
+    public VisualNode? Ancestor;
 
-    public void Clear() { }
+    public void Clear()
+    {
+
+        Prelim = 0;
+        Number = 0;
+        Change = 0;
+        Shift = 0;
+        Mod = 0;
+        Thread = null;
+        Ancestor = Parent;
+
+    }
     public VisualNode? GetLastChild() => Children.Count == 0 ? null : Children[^1];
     public VisualNode? GetFirstChild() => Children.Count == 0 ? null : Children[0];
-    public VisualNode? PrevSibling
+    public VisualNode? GetPrevSibling()
     {
-        get
-        {
-            if (Parent == null) return null;
-            var ind = Parent.Children.IndexOf(this);
-            if (ind == 0) return null;
-            return Parent.Children[ind - 1];
-        }
+        if (Parent == null) return null;
+        var ind = Parent.Children.IndexOf(this);
+        if (ind == 0) return null;
+        return Parent.Children[ind - 1];
     }
 
-    public VisualNode? NextSibling
+    public VisualNode? GetNextSibling()
     {
-        get
-        {
-            if (Parent == null) return null;
-            var ind = Parent.Children.IndexOf(this);
-            if (ind == Parent.Children.Count - 1) return null;
-            return Parent.Children[ind + 1];
-        }
+        if (Parent == null) return null;
+        var ind = Parent.Children.IndexOf(this);
+        if (ind == Parent.Children.Count - 1) return null;
+        return Parent.Children[ind + 1];
     }
-
-
 
 
     public Node Node { get; }
@@ -56,15 +58,15 @@ public class VisualNode
     public List<VisualNode> Children { get; } = new();
 
     public string Text { get; }
-    public Grid Grid { get; private set; }
-    public Line? Line { get; private set; } 
+    public Grid Grid { get; }
+    public Line? Line { get; }
 
     public VisualNode(Node node, VisualNode? parent, Canvas canvas)
     {
         _canvas = canvas;
         Node = node;
         Parent = parent;
-        //Ancestor = parent;
+        Ancestor = parent;
         Width = 40 + (node.Name.Length - 1) * 10;
         Height = 40;
 
@@ -76,11 +78,11 @@ public class VisualNode
             {
                 Stroke = Brushes.Yellow
             };
-                
+
             _canvas.Children.Add(Line);
             Panel.SetZIndex(Line, -1);
         }
-        
+
 
         Grid = new Grid();
 

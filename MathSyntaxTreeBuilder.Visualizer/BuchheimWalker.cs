@@ -4,17 +4,8 @@ namespace MathSyntaxTreeBuilder
 {
     public class Meta
     {
-        public double Width;
-        public double Height;
-        public double Prelim = 0; // ???
-        public int Number = 0; // ???
-        public double Change = 0; // ???
-        public double Shift = 0; // ???
-        public double Mod = 0; // ???
-        public double X = 0; // ???
-        public double Y = 0; // ???
-        public VisualNode? Thread = null; // ???
-        public VisualNode? Ancestor = null; // ???
+        //public VisualNode? Thread = null; // ???
+        //public VisualNode? Ancestor = null; // ???
     }
 
     internal class BuchheimWalker
@@ -24,6 +15,43 @@ namespace MathSyntaxTreeBuilder
         public static double HorizontalMargin = 30;
         public static double VerticalMargin = 30;
         private Dictionary<VisualNode, Meta> _metas;
+
+        public void Run(VisualNode root)
+        {
+            _metas = new Dictionary<VisualNode, Meta>();
+            var queue = new Queue<VisualNode>(new[] { root });
+            while (queue.Count > 0)
+            {
+                var current = queue.Dequeue();
+                _metas[current] = new Meta
+                {
+                    //Ancestor = current.Parent
+                };
+                foreach (var child in current.Children)
+                {
+                    queue.Enqueue(child);
+                }
+            }
+
+
+
+            for (var i = 0; i < _mDepths.Length; i++)
+            {
+                _mDepths[i] = 0;
+            }
+
+            _mMaxDepth = 0;
+
+            // do first pass - compute breadth information, collect depth info
+            FirstWalk(root, 0, 1);
+
+            // sum up the depth info
+            DetermineDepths();
+
+            // do second pass - assign layout positions
+            SecondWalk(root, null, -root.Prelim, 0);
+        }
+
 
         private double Spacing(VisualNode l, VisualNode r, bool siblings)
         {
@@ -52,42 +80,7 @@ namespace MathSyntaxTreeBuilder
             }
         }
 
-        public void Run(VisualNode root)
-        {
-            _metas = new Dictionary<VisualNode, Meta>();
-            var queue = new Queue<VisualNode>(new[] { root });
-            while (queue.Count > 0)
-            {
-                var current = queue.Dequeue();
-                _metas[current] = new Meta
-                {
-                    Ancestor = current.Parent
-                };
-                foreach (var child in current.Children)
-                {
-                    queue.Enqueue(child);
-                }
-            }
-
-
-
-            for (var i = 0; i < _mDepths.Length; i++)
-            {
-                _mDepths[i] = 0;
-            }
-
-            _mMaxDepth = 0;
-
-            // do first pass - compute breadth information, collect depth info
-            FirstWalk(root, 0, 1);
-
-            // sum up the depth info
-            DetermineDepths();
-
-            // do second pass - assign layout positions
-            SecondWalk(root, null, -root.Prelim, 0);
-        }
-
+        
 
         private void FirstWalk(VisualNode n, int num, int depth)
         {
@@ -96,7 +89,7 @@ namespace MathSyntaxTreeBuilder
 
             if (n.Children.Count == 0) // is leaf
             {
-                var l = n.PrevSibling;
+                var l = n.GetPrevSibling();
                 if (l == null)
                 {
                     n.Prelim = 0;
@@ -112,7 +105,7 @@ namespace MathSyntaxTreeBuilder
                 var rightMost = n.GetLastChild();
                 var defaultAncestor = leftMost;
                 var c = leftMost;
-                for (var i = 0; c != null; ++i, c = c.NextSibling)
+                for (var i = 0; c != null; ++i, c = c.GetNextSibling())
                 {
                     FirstWalk(c, i, depth + 1);
                     defaultAncestor = Apportion(c, defaultAncestor);
@@ -123,7 +116,7 @@ namespace MathSyntaxTreeBuilder
                 var midpoint = 0.5 *
                                (leftMost.Prelim + rightMost.Prelim);
 
-                var left = n.PrevSibling;
+                var left = n.GetPrevSibling();
                 if (left != null)
                 {
                     n.Prelim = left.Prelim + Spacing(left, n, true);
@@ -138,7 +131,7 @@ namespace MathSyntaxTreeBuilder
 
         private VisualNode Apportion(VisualNode v, VisualNode a)
         {
-            var w = v.PrevSibling;
+            var w = v.GetPrevSibling();
             if (w != null)
             {
                 VisualNode vip, vim, vop, vom;
@@ -161,7 +154,7 @@ namespace MathSyntaxTreeBuilder
                     vip = nl;
                     vom = NextLeft(vom);
                     vop = NextRight(vop);
-                    _metas[vop].Ancestor = v;
+                    vop.Ancestor = v;
                     var shift = vim.Prelim + sim -
                         (vip.Prelim + sip) + Spacing(vim, vip, false);
                     if (shift > 0)
@@ -180,12 +173,12 @@ namespace MathSyntaxTreeBuilder
                 }
                 if (nr != null && NextRight(vop) == null)
                 {
-                    _metas[vop].Thread = nr;
+                    vop.Thread = nr;
                     vop.Mod += sim - sop;
                 }
                 if (nl != null && NextLeft(vom) == null)
                 {
-                    _metas[vom].Thread = nl;
+                    vom.Thread = nl;
                     vom.Mod += sip - som;
                     a = v;
                 }
@@ -197,14 +190,14 @@ namespace MathSyntaxTreeBuilder
         {
             VisualNode c = null;
             c = n.GetFirstChild();
-            return c != null ? c : _metas[n].Thread;
+            return c != null ? c : n.Thread;
         }
 
         private VisualNode NextRight(VisualNode n)
         {
             VisualNode c = null;
             c = n.GetLastChild();
-            return c != null ? c : _metas[n].Thread;
+            return c != null ? c : n.Thread;
         }
 
         private void MoveSubtree(VisualNode wm, VisualNode wp, double shift)
@@ -221,7 +214,7 @@ namespace MathSyntaxTreeBuilder
         {
             double shift = 0, change = 0;
             for (var c = n.GetLastChild();
-                  c != null; c = c.PrevSibling)
+                  c != null; c = c.GetPrevSibling())
             {
                 c.Prelim += shift;
                 c.Mod += shift;
@@ -233,9 +226,9 @@ namespace MathSyntaxTreeBuilder
         private VisualNode Ancestor(VisualNode vim, VisualNode v, VisualNode a)
         {
             var p = v.Parent;
-            if (_metas[vim].Ancestor.Parent == p)
+            if (vim.Ancestor.Parent == p)
             {
-                return _metas[vim].Ancestor;
+                return vim.Ancestor;
             }
             else
             {
@@ -250,7 +243,7 @@ namespace MathSyntaxTreeBuilder
 
             depth += 1;
             for (var c = n.GetFirstChild();
-                  c != null; c = c.NextSibling)
+                  c != null; c = c.GetNextSibling())
             {
                 SecondWalk(c, n, m + n.Mod, depth);
             }
