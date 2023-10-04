@@ -1,11 +1,15 @@
-﻿using System.Windows;
+﻿using System.Reflection.Metadata.Ecma335;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using System.Windows.Shapes;
 
 namespace MathSyntaxTreeBuilder.Visualizer;
 
 public class VisualNode
 {
+    private readonly Canvas _canvas;
+
     // new shit
     public double Width;
     public double Height;
@@ -50,17 +54,14 @@ public class VisualNode
     public Node Node { get; }
     public VisualNode? Parent { get; }
     public List<VisualNode> Children { get; } = new();
-    public int IndexInRow { get; }
-    public int Depth { get; }
 
     public string Text { get; }
     public Grid Grid { get; private set; }
-    private Border Border;
-    public double HorizontalOffset;
-    public double VerticalOffset;
+    public Line? Line { get; private set; } 
 
-    public VisualNode(Node node, VisualNode? parent)
+    public VisualNode(Node node, VisualNode? parent, Canvas canvas)
     {
+        _canvas = canvas;
         Node = node;
         Parent = parent;
         //Ancestor = parent;
@@ -69,7 +70,23 @@ public class VisualNode
 
         Text = node.Name;
 
-        Border = new Border
+        if (parent != null)
+        {
+            Line = new Line
+            {
+                Stroke = Brushes.Yellow
+            };
+                
+            _canvas.Children.Add(Line);
+            Panel.SetZIndex(Line, -1);
+        }
+        
+
+        Grid = new Grid();
+
+
+
+        Grid.Children.Add(new Border
         {
             Width = Width,
             Height = Height,
@@ -93,10 +110,8 @@ public class VisualNode
                 Foreground = Brushes.Black,
                 FontWeight = FontWeights.Bold
             }
-        };
+        });
 
-        Grid = new Grid();
-        Grid.Children.Add(Border);
         Grid.Children.Add(new Border
         {
             Width = 16,
@@ -117,5 +132,7 @@ public class VisualNode
                 FontSize = 9
             }
         });
+
+        _canvas.Children.Add(Grid);
     }
 }

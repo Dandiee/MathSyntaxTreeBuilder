@@ -143,10 +143,6 @@ public class ViewModel : BindableBase
 
     private void Render()
     {
-        _window.CharactersGrid.ColumnDefinitions.Clear();
-        _window.CharactersGrid.Children.Clear();
-        _window.TreeCanvas.Children.Clear();
-        
         DrawTree();
         DrawFunction();
         AddTickChars();
@@ -160,6 +156,7 @@ public class ViewModel : BindableBase
         c.Children.Add(new Line { X1 = 0, X2 = c.ActualWidth, Y1 = o.Y, Y2 = o.Y, Stroke = Brushes.Yellow });
         c.Children.Add(new Line { X1 = o.X, X2 = o.X, Y1 = 0, Y2 = c.ActualHeight, Stroke = Brushes.Yellow });
 
+        if (_tree == null) return;
         if (_tree.Variables.Count != 1) return;
 
         var variableName = _tree.Variables.First();
@@ -197,6 +194,7 @@ public class ViewModel : BindableBase
 
         BuchheimWalker.VerticalMargin = TreeVerticalSpacing;
         BuchheimWalker.HorizontalMargin = TreeHorizontalSpacing;
+        new BuchheimWalker().Run(VisualTree);
 
         var queue = new Queue<VisualNode>(new[] { VisualTree });
         var mid = _window.TreeCanvas.ActualWidth / 2;
@@ -208,23 +206,14 @@ public class ViewModel : BindableBase
             Canvas.SetLeft(current.Grid, current.X + mid - (current.Width / 2));
             Canvas.SetTop(current.Grid, current.Y + BuchheimWalker.VerticalMargin);
 
-            _window.TreeCanvas.Children.Add(current.Grid);
-
             foreach (var child in current.Children)
             {
                 queue.Enqueue(child);
 
-                var line = new Line
-                {
-                    X1 = current.X + current.Width * 0.5 + mid - (current.Width / 2),
-                    X2 = child.X + child.Width * 0.5 + mid - (child.Width / 2),
-                    Y1 = current.Y + current.Height * 0.5 + BuchheimWalker.VerticalMargin,
-                    Y2 = child.Y + child.Height * 0.5 + BuchheimWalker.VerticalMargin,
-                    Stroke = Brushes.Yellow,
-
-                };
-                _window.TreeCanvas.Children.Add(line);
-                Panel.SetZIndex(line, -1);
+                child.Line!.X1 = current.X + current.Width * 0.5 + mid - (current.Width / 2);
+                child.Line!.X2 = child.X + child.Width * 0.5 + mid - (child.Width / 2);
+                child.Line!.Y1 = current.Y + current.Height * 0.5 + BuchheimWalker.VerticalMargin;
+                child.Line!.Y2 = child.Y + child.Height * 0.5 + BuchheimWalker.VerticalMargin;
             }
         }
     }
@@ -245,6 +234,9 @@ public class ViewModel : BindableBase
 
     private void AddTickChars()
     {
+        _window.CharactersGrid.ColumnDefinitions.Clear();
+        _window.CharactersGrid.Children.Clear();
+
         _window.CharactersGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
         var s = new TextBlock { Text = " " };
         _window.CharactersGrid.Children.Add(s);
@@ -266,7 +258,9 @@ public class ViewModel : BindableBase
 
     public VisualNode ToVisualTree(NodeRoot root)
     {
-        var visualRoot = new VisualNode(root, null);
+        _window.TreeCanvas.Children.Clear();
+
+        var visualRoot = new VisualNode(root, null, _window.TreeCanvas);
         var queue = new Queue<VisualNode>(new[] { visualRoot });
 
         while (queue.Count > 0)
@@ -274,12 +268,11 @@ public class ViewModel : BindableBase
             var current = queue.Dequeue();
             foreach (var child in current.Node.Children)
             {
-                var visualChild = new VisualNode(child, current);
+                var visualChild = new VisualNode(child, current, _window.TreeCanvas);
                 current.Children.Add(visualChild);
                 queue.Enqueue(visualChild);
             }
         }
-        new BuchheimWalker().Run(visualRoot);
 
         return visualRoot;
     }
@@ -294,11 +287,5 @@ public partial class MainWindow
         InitializeComponent();
         ViewModel = new ViewModel(this);
         DataContext = ViewModel;
-    }
-
-    private void TestSlider_OnValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
-    {
-        //BuchheimWalker.HorizontalMargin = TestSlider.Value;
-        //Render();
     }
 }
