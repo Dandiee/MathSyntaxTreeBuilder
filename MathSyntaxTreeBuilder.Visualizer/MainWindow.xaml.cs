@@ -1,7 +1,9 @@
 ﻿using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Shapes;
+using Prism.Commands;
 using Prism.Mvvm;
 
 namespace MathSyntaxTreeBuilder.Visualizer;
@@ -12,31 +14,42 @@ public class ViewModel : BindableBase
 
     private readonly MainWindow _window;
 
-    private bool _isInputChange;
-    private string _input = DefaultInput;
-    public string Input
+    private string _userInput;
+    public string UserInput
     {
-        get => _input;
+        get => _userInput;
         set
         {
-            if (SetProperty(ref _input, value))
+            if (SetProperty(ref _userInput, value))
             {
-                _isInputChange = true;
-                BuildTree();
-                _isInputChange = false;
+                ProcessedInput = value;
+                LengthLimit = value.Length;
             }
         }
     }
 
-    private int _lengthLimit = DefaultInput.Length - 1;
+    private string _processedInput;
+    public string ProcessedInput
+    {
+        get => _processedInput;
+        set
+        {
+            if (SetProperty(ref _processedInput, value))
+            {
+                Tree = MathSyntaxBuilder.GetSyntaxTree(value);
+            }
+        }
+    }
+
+    private int _lengthLimit;
     public int LengthLimit
     {
         get => _lengthLimit;
         set
         {
-            if (SetProperty(ref _lengthLimit, value) && !_isInputChange)
+            if (SetProperty(ref _lengthLimit, value))
             {
-                BuildTree();
+                ProcessedInput = UserInput.Substring(0, value);
             }
         }
     }
@@ -45,27 +58,61 @@ public class ViewModel : BindableBase
     public NodeRoot? Tree
     {
         get => _tree;
-        set => SetProperty(ref _tree, value);
+        set
+        {
+            if (SetProperty(ref _tree, value))
+            {
+                VisualTree = value == null ? null : ToVisualTree(value);
+            }
+        }
     }
 
     private VisualNode? _visualTree;
     public VisualNode? VisualTree
     {
         get => _visualTree;
-        set => SetProperty(ref _visualTree, value);
+        set
+        {
+            if (SetProperty(ref _visualTree, value))
+            {
+                Render();
+            }
+        } 
     }
+
+    private double _functionXFactor = 100;
+    public double FunctionXFactor
+    {
+        get => _functionXFactor;
+        set
+        {
+            if (SetProperty(ref _functionXFactor, value))
+            {
+                DrawFunction();
+            }
+        }
+    }
+
+    private double _functionYFactor = 100;
+    public double FunctionYFactor
+    {
+        get => _functionYFactor;
+        set
+        {
+            if (SetProperty(ref _functionYFactor, value))
+            {
+                DrawFunction();
+            }
+        }
+    }
+
+    public ICommand TreeCanvasSizeChanged { get; }
 
     public ViewModel(MainWindow window)
     {
         _window = window;
-        BuildTree();
-    }
-
-    private void BuildTree()
-    {
-        Tree = MathSyntaxBuilder.GetSyntaxTree(Input, LengthLimit);
-        VisualTree = ToVisualTree(Tree);
-        Render();
+        UserInput = DefaultInput;
+        TreeCanvasSizeChanged = new DelegateCommand<SizeChangedEventArgs>(ResizeTree);
     }
 
     private void Render()
@@ -73,7 +120,7 @@ public class ViewModel : BindableBase
         _window.CharactersGrid.ColumnDefinitions.Clear();
         _window.CharactersGrid.Children.Clear();
         _window.TreeCanvas.Children.Clear();
-
+        
         DrawTree();
         DrawFunction();
         AddTickChars();
@@ -81,19 +128,19 @@ public class ViewModel : BindableBase
 
     private void DrawFunction()
     {
+        _window.FunctionCanvas.Children.Clear();
+
         if (_tree.Variables.Count != 1) return;
 
         var variableName = _tree.Variables.First();
 
         var c = _window.FunctionCanvas; 
-        c.Children.Clear();
         var o = new Point(c.ActualWidth / 2, c.ActualHeight / 2);
-
         c.Children.Add(new Line { X1 = 0, X2 = c.ActualWidth, Y1 = o.Y, Y2 = o.Y, Stroke = Brushes.Yellow });
         c.Children.Add(new Line { X1 = o.X, X2 = o.X, Y1 = 0, Y2 = c.ActualHeight, Stroke = Brushes.Yellow });
 
         var poly = new Polyline { Stroke = Brushes.Red, StrokeThickness = 2 };
-        var totalRange = c.ActualWidth / _window.XFactorSlider.Value;
+        var totalRange = c.ActualWidth / FunctionXFactor;
 
         var vars = new Dictionary<string, double>();
         for (var x = totalRange / -2d; x <= totalRange; x += .01)
@@ -102,7 +149,7 @@ public class ViewModel : BindableBase
             var y = _tree.Eval(vars);
             if (!double.IsNaN(y))
             {
-                poly.Points.Add(new Point(x * _window.XFactorSlider.Value + o.X, y * -_window.YFactorSlider.Value + o.Y));
+                poly.Points.Add(new Point(x * FunctionXFactor + o.X, y * -FunctionYFactor + o.Y));
             }
             else
             {
@@ -121,6 +168,8 @@ public class ViewModel : BindableBase
     }
     private void DrawTree()
     {
+        if (VisualTree == null) return;
+
         var queue = new Queue<VisualNode>(new[] { VisualTree });
         var mid = _window.TreeCanvas.ActualWidth / 2;
 
@@ -151,29 +200,37 @@ public class ViewModel : BindableBase
             }
         }
 
-
-        AddTickChars();
-
-        _window.TokenTextBox.Text = Tree.LeftOverToken;
-        _window.DepthTextBox.Text = Tree.CurrentDepth.ToString();
-        _window.LastOpTextBox.Text = Tree.LastOperation.Op.Name;
-        _window.SubstringTextBox.Text = Input.Substring(0, LengthLimit);
-        _window.VariablesTextBox.Text = string.Join(", ", _tree.Variables);
-        //Eval.Text = string.Empty;
         _window.Result.Text = string.Empty;
     }
+
+    private void ResizeTree(SizeChangedEventArgs e)
+    {
+        var halfDelta = (e.NewSize.Width - e.PreviousSize.Width) / 2;
+        foreach (var child in _window.TreeCanvas.Children.OfType<UIElement>())
+        {
+            if (child is Line line)
+            {
+                line.X2 += halfDelta;
+                line.X1 += halfDelta;
+            }
+            else
+            {
+                var prevLeft = Canvas.GetLeft(child);
+                Canvas.SetLeft(child, prevLeft + halfDelta);
+            }
+        }
+    }
+
     private void AddTickChars()
     {
-        var text = Input.ToArray();
-        _window.CharactersGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = GridLength.Auto });
-
+        _window.CharactersGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
         var s = new TextBlock { Text = " " };
         _window.CharactersGrid.Children.Add(s);
         Grid.SetColumn(s, 0);
 
-        for (var index = 0; index < text.Length; index++)
+        for (var index = 0; index < UserInput.Length; index++)
         {
-            var c = text[index];
+            var c = UserInput[index];
             _window.CharactersGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Star) });
             var tb = new TextBlock
             {
@@ -208,66 +265,13 @@ public class ViewModel : BindableBase
 
 public partial class MainWindow
 {
-    private bool _isTextChange = true;
-    private bool _isInitialized = false;
-
     public ViewModel ViewModel { get; }
-
-    private NodeRoot? _tree = null;
+    
     public MainWindow()
     {
         InitializeComponent();
         ViewModel = new ViewModel(this);
         DataContext = ViewModel;
-    }
-
-    
-
-  
-    private void InputChanged(object sender, TextChangedEventArgs e)
-    {
-        //_isTextChange = true;
-        //BuildTree();
-        //LengthLimitSlider.Value = InputTextBox.Text.Length;
-        //Render();
-        //_isTextChange = false;
-    }
-    
-
-   
-  
-
-    private void LengthLimitSlider_OnValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
-    {
-        //if (!_isTextChange)
-        //{
-        //    BuildTree();
-        //}
-    }
-
-
-    private void FactorSliderChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
-    {
-        //Render();
-    }
-
-
-    private void TreeCanvas_OnSizeChanged(object sender, SizeChangedEventArgs e)
-    {
-        //var halfDelta = (e.NewSize.Width - e.PreviousSize.Width) / 2;
-        //foreach (var child in TreeCanvas.Children.OfType<UIElement>())
-        //{
-        //    if (child is Line line)
-        //    {
-        //        line.X2 += halfDelta;
-        //        line.X1 += halfDelta;
-        //    }
-        //    else
-        //    {
-        //        var prevLeft = Canvas.GetLeft(child);
-        //        Canvas.SetLeft(child, prevLeft + halfDelta);
-        //    }
-        //}
     }
 
     private void TestSlider_OnValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)

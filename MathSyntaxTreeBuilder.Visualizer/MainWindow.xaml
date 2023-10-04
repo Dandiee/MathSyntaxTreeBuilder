@@ -4,11 +4,16 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:MathSyntaxTreeBuilder.Visualizer"
+        xmlns:b="http://schemas.microsoft.com/xaml/behaviors"
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance Type=local:ViewModel, IsDesignTimeCreatable=False}" 
 
-        Title="Dani f(x)" Height="450" Width="800">
-    <Grid Background="#333">
+        Title="Dani f(x)" Height="450" Width="800"
+        Background="#333">
+    <Grid>
+
+        <!-- User Input -->
+
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
@@ -16,7 +21,7 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
-        <TextBox Grid.Row="0" Text="{Binding Input, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+        <TextBox Grid.Row="0" Text="{Binding UserInput, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                  FontWeight="Bold"
                  FontFamily="Consolas" FontSize="18" Padding="10"/>
         <Grid Grid.Row="1">
@@ -29,7 +34,7 @@
                     Value="{Binding LengthLimit, Mode=TwoWay}"
                     Margin="10"
                     TickPlacement="BottomRight"
-                    Maximum="{Binding Input.Length}"/>
+                    Maximum="{Binding UserInput.Length}"/>
             <Grid x:Name="CharactersGrid" Grid.Row="1" Margin="12 0 10 10">
                 <Grid.Resources>
                     <Style TargetType="TextBlock">
@@ -52,7 +57,7 @@
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
-            <TextBlock Foreground="Yellow" x:Name="SubstringTextBox" 
+            <TextBlock Foreground="Yellow" Text="{Binding ProcessedInput}"
                        Grid.ColumnSpan="2"
                        Margin="10" FontSize="14" FontFamily="Consolas"/>
 
@@ -73,16 +78,16 @@
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
                     <TextBlock Grid.Row="0" Grid.Column="0" Text="Token"/>
-                    <TextBlock Foreground="Yellow" Grid.Row="0" Grid.Column="1" x:Name="TokenTextBox"/>
+                    <TextBlock Foreground="Yellow" Grid.Row="0" Grid.Column="1" Text="{Binding Tree.LeftOverToken}"/>
 
                     <TextBlock Grid.Row="1" Grid.Column="0" Text="ScopeDepth"/>
-                    <TextBlock Foreground="Yellow" Grid.Row="1" Grid.Column="1" x:Name="DepthTextBox"/>
+                    <TextBlock Foreground="Yellow" Grid.Row="1" Grid.Column="1"  Text="{Binding Tree.CurrentDepth}"/>
 
                     <TextBlock Grid.Row="2" Grid.Column="0" Text="Op"/>
-                    <TextBlock Foreground="Yellow" Grid.Row="2" Grid.Column="1" x:Name="LastOpTextBox"/>
+                    <TextBlock Foreground="Yellow" Grid.Row="2" Grid.Column="1"  Text="{Binding Tree.LastOperation}"/>
 
                     <TextBlock Grid.Row="3" Grid.Column="0" Text="Vars"/>
-                    <TextBlock Foreground="Yellow" Grid.Row="3" Grid.Column="1" x:Name="VariablesTextBox"/>
+                    <TextBlock Foreground="Yellow" Grid.Row="3" Grid.Column="1"  Text="{Binding Tree.Variables}"/>
                 </Grid>
 
             </StackPanel>
@@ -93,7 +98,13 @@
                     <ColumnDefinition/>
                 </Grid.ColumnDefinitions>
                 <GridSplitter Grid.Column="1" HorizontalAlignment="Stretch"  VerticalAlignment="Stretch"/>
-                <Canvas ClipToBounds="True" x:Name="TreeCanvas" Grid.Column="0" SizeChanged="TreeCanvas_OnSizeChanged"/>
+                <Canvas ClipToBounds="True" x:Name="TreeCanvas" Grid.Column="0">
+                    <b:Interaction.Triggers>
+                        <b:EventTrigger EventName="SizeChanged">
+                            <b:InvokeCommandAction Command="{Binding TreeCanvasSizeChanged}" PassEventArgsToCommand="True"/>
+                        </b:EventTrigger>
+                    </b:Interaction.Triggers>
+                </Canvas>
 
                 <Grid Grid.Column="2">
                     <Grid.ColumnDefinitions>
@@ -104,22 +115,16 @@
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
-                    <Slider x:Name="XFactorSlider" Grid.Column="1" Grid.Row="0" Margin="5" Minimum="1" Maximum="200" Value="100" ValueChanged="FactorSliderChanged"/>
-                    <Slider x:Name="YFactorSlider" Grid.Column="0" Grid.Row="1" Orientation="Vertical" Margin="5" Minimum="1" Maximum="200" Value="100" ValueChanged="FactorSliderChanged"/>
-                    <Canvas ClipToBounds="True" x:Name="FunctionCanvas" VerticalAlignment="Stretch" HorizontalAlignment="Stretch"
-                            
-                            Grid.Row="1" Grid.Column="1">
-                        <Line X1="0" X2="100" Y1="0" Y2="100" Stroke="Yellow"/>
-                    </Canvas>
+                    <Slider Grid.Column="1" Grid.Row="0" Margin="5" Minimum="1" Maximum="200" Value="{Binding FunctionXFactor}" />
+                    <Slider Grid.Column="0" Grid.Row="1" Margin="5" Minimum="1" Maximum="200" Value="{Binding FunctionYFactor}" Orientation="Vertical" />
+                    <Canvas ClipToBounds="True" x:Name="FunctionCanvas" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Grid.Row="1" Grid.Column="1"/>
                 </Grid>
-                
-
             </Grid>
 
         </Grid>
 
         <TextBox x:Name="Result" Grid.Row="3" FontSize="18" Padding="10" IsReadOnly="True"/>
-        <!--<TextBox x:Name="Eval" Grid.Row="4" FontSize="18" Padding="10" IsReadOnly="True"/>-->
+        <TextBox x:Name="Eval" Grid.Row="4" FontSize="18" Padding="10" IsReadOnly="True"/>
         <Slider x:Name="TestSlider" Grid.Row="4"  Minimum="0" Maximum="40" Value="30" ValueChanged="TestSlider_OnValueChanged"/>
     </Grid>
 </Window>

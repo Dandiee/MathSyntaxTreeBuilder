@@ -2,16 +2,15 @@
 
 public class MathSyntaxBuilder
 {
-    public static NodeRoot GetSyntaxTree(string input, int? length = null)
+    public static NodeRoot GetSyntaxTree(string input)
     {
         var token = string.Empty;
         var depth = 0;
         var root = new NodeRoot();
         var node = root as NodeOp;
 
-        for (var index = 0; index < (length ?? input.Length); index++)
+        foreach (var c in input)
         {
-            var c = input[index];
             if (c == ' ') continue;
             if (c == ',')
             {
@@ -75,12 +74,9 @@ public class MathSyntaxBuilder
             else token += c.ToString();
         }
 
-        if (!length.HasValue || length.Value == input.Length)
+        if (token.Length > 0)
         {
-            if (token.Length > 0)
-            {
-                node.AddArg(token);
-            }
+            node.AddArg(token);
         }
 
         root.LeftOverToken = token;
