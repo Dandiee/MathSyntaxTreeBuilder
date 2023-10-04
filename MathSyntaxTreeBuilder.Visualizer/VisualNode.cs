@@ -90,6 +90,7 @@ public class VisualNode
                 VerticalAlignment = VerticalAlignment.Center,
                 HorizontalAlignment = HorizontalAlignment.Center,
                 FontSize = 18,
+                Foreground = Brushes.Black,
                 FontWeight = FontWeights.Bold
             }
         };
@@ -113,7 +114,6 @@ public class VisualNode
                 Foreground = Brushes.Black,
                 VerticalAlignment = VerticalAlignment.Center,
                 HorizontalAlignment = HorizontalAlignment.Center,
-                FontFamily = new FontFamily("Consolas"),
                 FontSize = 9
             }
         });

@@ -22,6 +22,7 @@ public class NodeRoot : NodeOp
     public int CurrentDepth { get; set; }
     public NodeOp LastOperation { get; set; }
     public HashSet<string> Variables { get; } = new(StringComparer.OrdinalIgnoreCase);
+    public string VariablesText => string.Join(", ", Variables);
     public override string BuildString() => Children[0].BuildString();
     public override double Eval(Dictionary<string, double>? variables = null) => Children[0].Eval(variables);
     public override string Name => "Identity";

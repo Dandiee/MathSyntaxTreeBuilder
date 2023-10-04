@@ -106,6 +106,32 @@ public class ViewModel : BindableBase
         }
     }
 
+    private double _treeVerticalSpacing = 30;
+    public double TreeVerticalSpacing
+    {
+        get => _treeVerticalSpacing;
+        set
+        {
+            if (SetProperty(ref _treeVerticalSpacing, value))
+            {
+                DrawTree();
+            }
+        }
+    }
+
+    private double _treeHorizontalSpacing = 30;
+    public double TreeHorizontalSpacing
+    {
+        get => _treeHorizontalSpacing;
+        set
+        {
+            if (SetProperty(ref _treeHorizontalSpacing, value))
+            {
+                DrawTree();
+            }
+        }
+    }
+
     public ICommand TreeCanvasSizeChanged { get; }
 
     public ViewModel(MainWindow window)
@@ -129,15 +155,14 @@ public class ViewModel : BindableBase
     private void DrawFunction()
     {
         _window.FunctionCanvas.Children.Clear();
-
-        if (_tree.Variables.Count != 1) return;
-
-        var variableName = _tree.Variables.First();
-
         var c = _window.FunctionCanvas; 
         var o = new Point(c.ActualWidth / 2, c.ActualHeight / 2);
         c.Children.Add(new Line { X1 = 0, X2 = c.ActualWidth, Y1 = o.Y, Y2 = o.Y, Stroke = Brushes.Yellow });
         c.Children.Add(new Line { X1 = o.X, X2 = o.X, Y1 = 0, Y2 = c.ActualHeight, Stroke = Brushes.Yellow });
+
+        if (_tree.Variables.Count != 1) return;
+
+        var variableName = _tree.Variables.First();
 
         var poly = new Polyline { Stroke = Brushes.Red, StrokeThickness = 2 };
         var totalRange = c.ActualWidth / FunctionXFactor;
@@ -170,6 +195,9 @@ public class ViewModel : BindableBase
     {
         if (VisualTree == null) return;
 
+        BuchheimWalker.VerticalMargin = TreeVerticalSpacing;
+        BuchheimWalker.HorizontalMargin = TreeHorizontalSpacing;
+
         var queue = new Queue<VisualNode>(new[] { VisualTree });
         var mid = _window.TreeCanvas.ActualWidth / 2;
 
@@ -199,8 +227,6 @@ public class ViewModel : BindableBase
                 Panel.SetZIndex(line, -1);
             }
         }
-
-        _window.Result.Text = string.Empty;
     }
 
     private void ResizeTree(SizeChangedEventArgs e)
@@ -213,11 +239,7 @@ public class ViewModel : BindableBase
                 line.X2 += halfDelta;
                 line.X1 += halfDelta;
             }
-            else
-            {
-                var prevLeft = Canvas.GetLeft(child);
-                Canvas.SetLeft(child, prevLeft + halfDelta);
-            }
+            else Canvas.SetLeft(child, Canvas.GetLeft(child) + halfDelta);
         }
     }
 
