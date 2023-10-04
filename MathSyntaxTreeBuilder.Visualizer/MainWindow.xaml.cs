@@ -133,12 +133,14 @@ public class ViewModel : BindableBase
     }
 
     public ICommand TreeCanvasSizeChanged { get; }
+    public ICommand FunctionCanvasSizeChanged { get; }
 
     public ViewModel(MainWindow window)
     {
         _window = window;
         UserInput = DefaultInput;
         TreeCanvasSizeChanged = new DelegateCommand<SizeChangedEventArgs>(ResizeTree);
+        FunctionCanvasSizeChanged = new DelegateCommand<SizeChangedEventArgs>(ResizeFunction);
     }
 
     private void Render()
@@ -151,10 +153,12 @@ public class ViewModel : BindableBase
     private void DrawFunction()
     {
         _window.FunctionCanvas.Children.Clear();
-        var c = _window.FunctionCanvas; 
-        var o = new Point(c.ActualWidth / 2, c.ActualHeight / 2);
-        c.Children.Add(new Line { X1 = 0, X2 = c.ActualWidth, Y1 = o.Y, Y2 = o.Y, Stroke = Brushes.Yellow });
-        c.Children.Add(new Line { X1 = o.X, X2 = o.X, Y1 = 0, Y2 = c.ActualHeight, Stroke = Brushes.Yellow });
+        var c = _window.FunctionCanvas;
+        var actualWidth = c.ActualWidth == 0 ? 500 : c.ActualWidth;
+        var actualHeight = c.ActualHeight == 0 ? 500 : c.ActualHeight;
+        var o = new Point(actualWidth / 2, actualHeight / 2);
+        c.Children.Add(new Line { X1 = 0, X2 = actualWidth, Y1 = o.Y, Y2 = o.Y, Stroke = Brushes.Yellow });
+        c.Children.Add(new Line { X1 = o.X, X2 = o.X, Y1 = 0, Y2 = actualHeight, Stroke = Brushes.Yellow });
 
         if (_tree == null) return;
         if (_tree.Variables.Count != 1) return;
@@ -162,7 +166,7 @@ public class ViewModel : BindableBase
         var variableName = _tree.Variables.First();
 
         var poly = new Polyline { Stroke = Brushes.Red, StrokeThickness = 2 };
-        var totalRange = c.ActualWidth / FunctionXFactor;
+        var totalRange = actualWidth / FunctionXFactor;
 
         var vars = new Dictionary<string, double>();
         for (var x = totalRange / -2d; x <= totalRange; x += .01)
@@ -188,6 +192,15 @@ public class ViewModel : BindableBase
             c.Children.Add(poly);
         }
     }
+
+    private void ResizeFunction(SizeChangedEventArgs e)
+    {
+        var halfXDelta = (e.NewSize.Width - e.PreviousSize.Width) / 2;
+        var halfYDelta = (e.NewSize.Height - e.PreviousSize.Height) / 2;
+
+        DrawFunction();
+    }
+
     private void DrawTree()
     {
         if (VisualTree == null) return;
@@ -197,7 +210,8 @@ public class ViewModel : BindableBase
         new BuchheimWalker().Run(VisualTree);
 
         var queue = new Queue<VisualNode>(new[] { VisualTree });
-        var mid = _window.TreeCanvas.ActualWidth / 2;
+        var actualWidth = _window.TreeCanvas.ActualWidth == 0 ? 500 : _window.TreeCanvas.ActualWidth;
+        var mid = actualWidth / 2;
 
         while (queue.Count > 0)
         {

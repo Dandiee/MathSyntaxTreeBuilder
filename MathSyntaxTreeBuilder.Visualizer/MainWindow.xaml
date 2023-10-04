@@ -143,7 +143,13 @@
             </Grid.RowDefinitions>
             <Slider Grid.Column="1" Grid.Row="0" Margin="5" Minimum="1" Maximum="200" Value="{Binding FunctionXFactor}" />
             <Slider Grid.Column="0" Grid.Row="1" Margin="5" Minimum="1" Maximum="200" Value="{Binding FunctionYFactor}" Orientation="Vertical" VerticalAlignment="Stretch" />
-            <Canvas ClipToBounds="True" x:Name="FunctionCanvas" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Grid.Row="1" Grid.Column="1"/>
+            <Canvas ClipToBounds="True" x:Name="FunctionCanvas" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Grid.Row="1" Grid.Column="1">
+                <b:Interaction.Triggers>
+                    <b:EventTrigger EventName="SizeChanged">
+                        <b:InvokeCommandAction Command="{Binding FunctionCanvasSizeChanged}" PassEventArgsToCommand="True"/>
+                    </b:EventTrigger>
+                </b:Interaction.Triggers>
+            </Canvas>
         </Grid>
 
         <!-- Footer -->
