@@ -1,66 +1,50 @@
-﻿using System.Collections;
-using System.Runtime.InteropServices;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
-using System.Windows.Media.Media3D;
 using System.Windows.Shapes;
-using System.Xml.Linq;
 
 namespace MathSyntaxTreeBuilder.Visualizer;
 
 public partial class MainWindow
 {
-    private bool isInited = false;
+    private bool _isTextChange = true;
+    private bool _isInitialized = false;
+
+    private NodeRoot? _tree = null;
     public MainWindow()
     {
         InitializeComponent();
-        isInited = true;
+        _isInitialized = true;
         InputTextBox.Text = "sin((5+4*cos(1))*cos(2))";
+        
+    }
+
+    private void BuildTree()
+    {
+        _tree = MathSyntaxBuilder.GetSyntaxTree(InputTextBox.Text, (int)LengthLimitSlider.Value);
+        Render();
+    }
+
+    private void Render()
+    {
+        if (!_isInitialized) return;
+
+        CharactersGrid.ColumnDefinitions.Clear();
+        CharactersGrid.Children.Clear();
+        TreeCanvas.Children.Clear();
+
+        DrawTree();
+        DrawFunction();
     }
 
     private void InputChanged(object sender, TextChangedEventArgs e)
     {
-        if (sender is TextBox textBox)
-        {
-            LengthLimitSlider.Value = InputTextBox.Text.Length;
-            Calculate();
-        }
+        _isTextChange = true;
+        BuildTree();
+        LengthLimitSlider.Value = InputTextBox.Text.Length;
+        Render();
+        _isTextChange = false;
     }
-
-    private void Calculate()
-    {
-        if (string.IsNullOrEmpty(InputTextBox.Text))
-        {
-            Clear();
-        }
-        else
-        {
-            try
-            {
-                var tree = MathSyntaxBuilder.GetSyntaxTree(InputTextBox.Text, (int)LengthLimitSlider.Value);
-                Draw(tree);
-
-
-                if (tree.Variables.Count > 0)
-                {
-                    DrawFunction(tree);
-                }
-                else
-                {
-                    //Eval.Text = tree.Eval().ToString();
-                }
-
-                Result.Text = tree.BuildString();
-                InputTextBox.Foreground = new SolidColorBrush(Colors.Black);
-            }
-            catch
-            {
-                InputTextBox.Foreground = new SolidColorBrush(Colors.Red);
-            }
-        }
-    }
-
     private void AddTickChars()
     {
         var text = InputTextBox.Text.ToArray();
@@ -86,12 +70,11 @@ public partial class MainWindow
         }
     }
 
-    private void DrawFunction(NodeRoot root)
+    private void DrawFunction()
     {
-        if (!isInited) return;
-        if (root.Variables.Count != 1) return;
+        if (_tree.Variables.Count != 1) return;
 
-        var variableName = root.Variables.First();
+        var variableName = _tree.Variables.First();
 
         var c = FunctionCanvas; c.Children.Clear();
         var o = new Point(c.ActualWidth / 2, c.ActualHeight / 2);
@@ -100,22 +83,13 @@ public partial class MainWindow
         c.Children.Add(new Line { X1 = o.X, X2 = o.X, Y1 = 0, Y2 = c.ActualHeight, Stroke = Brushes.Yellow });
 
         var poly = new Polyline { Stroke = Brushes.Red, StrokeThickness = 2 };
-
-        //var pixelPerUnit = 100;
         var totalRange = c.ActualWidth / XFactorSlider.Value;
 
         var vars = new Dictionary<string, double>();
-        Point? lastY = null;
         for (var x = totalRange / -2d; x <= totalRange; x += .01)
         {
-            if (x == 0)
-            {
-
-            }
-
             vars[variableName] = x;
-
-            var y = root.Eval(vars);
+            var y = _tree.Eval(vars);
             if (!double.IsNaN(y))
             {
                 poly.Points.Add(new Point(x * XFactorSlider.Value + o.X, y * -YFactorSlider.Value + o.Y));
@@ -138,15 +112,15 @@ public partial class MainWindow
 
     public VisualNode ToVisualTree(NodeRoot root)
     {
-        var visualRoot = new VisualNode(root, null, true);
-        var queue = new Queue<VisualNode>(new [] { visualRoot });
+        var visualRoot = new VisualNode(root, null);
+        var queue = new Queue<VisualNode>(new[] { visualRoot });
 
         while (queue.Count > 0)
         {
             var current = queue.Dequeue();
             foreach (var child in current.Node.Children)
             {
-                var visualChild = new VisualNode(child, current, true);
+                var visualChild = new VisualNode(child, current);
                 current.Children.Add(visualChild);
                 queue.Enqueue(visualChild);
             }
@@ -154,25 +128,20 @@ public partial class MainWindow
         return visualRoot;
     }
 
-    private void Draw(NodeRoot root)
+    private void DrawTree()
     {
-        if (!isInited) return;
-        
-
-        Clear();
-
         var b = new BuchheimWalker();
-        var visualTree = ToVisualTree(root);
+        var visualTree = ToVisualTree(_tree);
         b.Run(visualTree);
 
         var q = new Queue<VisualNode>(new[] { visualTree });
         var mid2 = TreeCanvas.ActualWidth / 2;
-        
+
         while (q.Count > 0)
         {
             var current = q.Dequeue();
 
-            Canvas.SetLeft(current.Grid, current.X + mid2 - (current.Width/ 2));
+            Canvas.SetLeft(current.Grid, current.X + mid2 - (current.Width / 2));
             Canvas.SetTop(current.Grid, current.Y + BuchheimWalker.VerticalMargin);
 
             TreeCanvas.Children.Add(current.Grid);
@@ -187,7 +156,7 @@ public partial class MainWindow
                     X2 = child.X + child.Width * 0.5 + mid2 - (child.Width / 2),
                     Y1 = current.Y + current.Height * 0.5 + BuchheimWalker.VerticalMargin,
                     Y2 = child.Y + child.Height * 0.5 + BuchheimWalker.VerticalMargin,
-                    Stroke =Brushes.Yellow,
+                    Stroke = Brushes.Yellow,
 
                 };
                 TreeCanvas.Children.Add(line);
@@ -198,51 +167,31 @@ public partial class MainWindow
 
         AddTickChars();
 
-        TokenTextBox.Text = root.LeftOverToken;
-        DepthTextBox.Text = root.CurrentDepth.ToString();
-        LastOpTextBox.Text = root.LastOperation.Op.Name;
+        TokenTextBox.Text = _tree.LeftOverToken;
+        DepthTextBox.Text = _tree.CurrentDepth.ToString();
+        LastOpTextBox.Text = _tree.LastOperation.Op.Name;
         SubstringTextBox.Text = InputTextBox.Text.Substring(0, (int)LengthLimitSlider.Value);
-        VariablesTextBox.Text = string.Join(", ", root.Variables);
+        VariablesTextBox.Text = string.Join(", ", _tree.Variables);
         //Eval.Text = string.Empty;
         Result.Text = string.Empty;
     }
 
-    private void Clear()
-    {
-        CharactersGrid.ColumnDefinitions.Clear();
-        CharactersGrid.Children.Clear();
-        TreeCanvas.Children.Clear();
-    }
-
     private void LengthLimitSlider_OnValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
     {
-        Calculate();
-
-    }
-
-    private void FactorSliderChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
-    {
-        try
+        if (!_isTextChange)
         {
-
-            var tree = MathSyntaxBuilder.GetSyntaxTree(InputTextBox.Text, (int)LengthLimitSlider.Value);
-            Draw(tree);
-            if (tree.Variables.Count > 0)
-            {
-                
-                DrawFunction(tree);
-            }
+            BuildTree();
         }
-        catch
-        {
-        }
-
     }
+        
+
+    private void FactorSliderChanged(object sender, RoutedPropertyChangedEventArgs<double> e) =>
+        Render();
+
 
     private void TreeCanvas_OnSizeChanged(object sender, SizeChangedEventArgs e)
     {
         var halfDelta = (e.NewSize.Width - e.PreviousSize.Width) / 2;
-
         foreach (var child in TreeCanvas.Children.OfType<UIElement>())
         {
             if (child is Line line)
@@ -260,135 +209,7 @@ public partial class MainWindow
 
     private void TestSlider_OnValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
     {
-        try
-        {
-            BuchheimWalker.HorizontalMargin = TestSlider.Value;
-            var tree = MathSyntaxBuilder.GetSyntaxTree(InputTextBox.Text, (int)LengthLimitSlider.Value);
-            Draw(tree);
-            if (tree.Variables.Count > 0)
-            {
-
-                DrawFunction(tree);
-            }
-        }
-        catch
-        {
-        }
-    }
-}
-
-public class VisualNode
-{
-    // new shit
-    public double Width;
-    public double Height;
-    public double Prelim = 0; // ???
-    public int Number = 0; // ???
-    public double Change = 0; // ???
-    public double Shift = 0; // ???
-    public double Mod = 0; // ???
-    public double X = 0; // ???
-    public double Y = 0; // ???
-    //public VisualNode? Thread = null; // ???
-    //public VisualNode? Ancestor = null; // ???
-
-    public void Clear() {}
-    public VisualNode? GetLastChild() => Children.Count == 0 ? null : Children[^1];
-    public VisualNode? GetFirstChild() => Children.Count == 0 ? null : Children[0];
-    public VisualNode? PrevSibling
-    {
-        get
-        {
-            if (Parent == null) return null;
-            var ind = Parent.Children.IndexOf(this);
-            if (ind == 0) return null;
-            return Parent.Children[ind - 1];
-        }
-    }
-
-    public VisualNode? NextSibling 
-    {
-        get
-        {
-            if (Parent == null) return null;
-            var ind = Parent.Children.IndexOf(this);
-            if (ind == Parent.Children.Count - 1) return null;
-            return Parent.Children[ind + 1];
-        }
-    }
-
-
-
-
-    public Node Node { get; }
-    public VisualNode? Parent { get; }
-    public List<VisualNode> Children { get; } = new();
-    public int IndexInRow { get; }
-    public int Depth { get; }
-
-    public string Text { get; }
-    public Grid Grid { get; private set; }
-    private Border Border;
-    public double HorizontalOffset;
-    public double VerticalOffset;
-
-    public VisualNode(Node node, VisualNode? parent, bool goodShit)
-    {
-        Node = node;
-        Parent = parent;
-        //Ancestor = parent;
-        Width = 40 + (node.Name.Length - 1) * 10;
-        Height = 40;
-
-        Text = node.Name;
-
-        Border = new Border
-        {
-            Width = Width,
-            Height = Height,
-            CornerRadius = new CornerRadius(20),
-            Background = Node is NodeOp ?
-                Node is NodeRoot
-                    ? Brushes.DeepSkyBlue
-                    : Brushes.White
-                : Brushes.DarkGray,
-            HorizontalAlignment = HorizontalAlignment.Center,
-            Margin = new Thickness(0),
-            BorderBrush = Brushes.Yellow,
-            BorderThickness = new Thickness(2),
-            Child = new TextBlock
-            {
-                Text = Text,
-                TextAlignment = TextAlignment.Center,
-                VerticalAlignment = VerticalAlignment.Center,
-                HorizontalAlignment = HorizontalAlignment.Center,
-                FontSize = 18,
-                FontWeight = FontWeights.Bold
-            }
-        };
-
-        Grid = new Grid();
-        Grid.Children.Add(Border);
-        Grid.Children.Add(new Border
-        {
-            Width = 16,
-            Height = 16,
-            CornerRadius = new CornerRadius(8),
-            BorderBrush = Brushes.Black,
-            Background = Brushes.Yellow,
-            BorderThickness = new Thickness(1),
-            HorizontalAlignment = HorizontalAlignment.Left,
-            VerticalAlignment = VerticalAlignment.Top,
-            Margin = new Thickness(-5, -5, 0, 0),
-            Child = new TextBlock
-            {
-                Text = Node.ScopeDepth.ToString(),
-                Foreground = Brushes.Black,
-                VerticalAlignment = VerticalAlignment.Center,
-                HorizontalAlignment = HorizontalAlignment.Center,
-                FontFamily = new FontFamily("Consolas"),
-                FontSize = 9
-            }
-        });
+        BuchheimWalker.HorizontalMargin = TestSlider.Value;
+        Render();
     }
 }
