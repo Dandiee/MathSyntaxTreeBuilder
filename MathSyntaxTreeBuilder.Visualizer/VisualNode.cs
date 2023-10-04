@@ -66,6 +66,7 @@ public class VisualNode
     public bool IsDragged { get; private set; }
     private Point? _dragStartPos;
     public TextBlock MainTextBlock { get; }
+    private double? _dragStartValue;
 
     public VisualNode(Node node, VisualNode? parent, Canvas canvas, ViewModel owner)
     {
@@ -153,7 +154,12 @@ public class VisualNode
             IsDragged = true;
             _dragStartPos = args.GetPosition(_canvas);
             MainBorder.Background = Brushes.YellowGreen;
-            
+            if (Node is NodeArg arg)
+            {
+                _dragStartValue = arg.Delta;
+            }
+
+
         };
         _canvas.MouseMove += (sender, args) =>
         {
@@ -164,7 +170,7 @@ public class VisualNode
                 {
                     var newPos = args.GetPosition(_canvas);
                     var delta = (_dragStartPos!.Value.Y - newPos.Y) / 20;
-                    arg.Delta = delta;
+                    arg.Delta = _dragStartValue.Value + delta;
                     MainTextBlock.Text = (arg.DoubleValue + arg.Delta).ToString("N2");
                     _owner.DrawFunction();
                 }
