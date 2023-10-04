@@ -150,7 +150,7 @@ public class ViewModel : BindableBase
         AddTickChars();
     }
 
-    private void DrawFunction()
+    public void DrawFunction()
     {
         _window.FunctionCanvas.Children.Clear();
         var c = _window.FunctionCanvas;
@@ -274,7 +274,7 @@ public class ViewModel : BindableBase
     {
         _window.TreeCanvas.Children.Clear();
 
-        var visualRoot = new VisualNode(root, null, _window.TreeCanvas);
+        var visualRoot = new VisualNode(root, null, _window.TreeCanvas, this);
         var queue = new Queue<VisualNode>(new[] { visualRoot });
 
         while (queue.Count > 0)
@@ -282,7 +282,7 @@ public class ViewModel : BindableBase
             var current = queue.Dequeue();
             foreach (var child in current.Node.Children)
             {
-                var visualChild = new VisualNode(child, current, _window.TreeCanvas);
+                var visualChild = new VisualNode(child, current, _window.TreeCanvas, this);
                 current.Children.Add(visualChild);
                 queue.Enqueue(visualChild);
             }

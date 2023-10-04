@@ -147,6 +147,7 @@ public class NodeArg : Node
     public readonly double DoubleValue;
     public readonly string VariableName;
     public readonly bool IsNumerical;
+    public double Delta;
 
     public NodeArg(string value, int depth)
         : base(depth)
@@ -163,6 +164,7 @@ public class NodeArg : Node
         {
             IsNumerical = true;
             DoubleValue = doubleValue;
+            Value = doubleValue.ToString("N2");
         }
         else
         {
@@ -175,7 +177,7 @@ public class NodeArg : Node
     public override string BuildString() => Value;
 
     public override double Eval(Dictionary<string, double>? variables = null)
-        => IsNumerical ? DoubleValue : variables[VariableName];
+        => IsNumerical ? DoubleValue + Delta : variables[VariableName];
 
     public override string Name => Value;
 }
