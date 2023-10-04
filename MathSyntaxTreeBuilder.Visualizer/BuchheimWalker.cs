@@ -15,6 +15,9 @@ namespace MathSyntaxTreeBuilder
         public static double HorizontalMargin = 30;
         public static double VerticalMargin = 30;
         private Dictionary<VisualNode, Meta> _metas;
+        public double? MinX { get; private set; }
+        public double? MaxX { get; private set; }
+        public double TotalWidth { get; set; }
 
         public void Run(VisualNode root)
         {
@@ -50,6 +53,8 @@ namespace MathSyntaxTreeBuilder
 
             // do second pass - assign layout positions
             SecondWalk(root, null, -root.Prelim, 0);
+
+            TotalWidth = MaxX.Value - MinX.Value;
         }
 
 
@@ -240,6 +245,16 @@ namespace MathSyntaxTreeBuilder
         {
             n.X = n.Prelim + m;
             n.Y = _mDepths[depth] + depth * VerticalMargin;
+
+            if (MinX == null || MinX > n.X)
+            {
+                MinX = n.X;
+            }
+
+            if (MaxX == null || MaxX < n.X)
+            {
+                MaxX = n.X;
+            }
 
             depth += 1;
             for (var c = n.GetFirstChild();

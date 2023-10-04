@@ -77,7 +77,7 @@ public class ViewModel : BindableBase
             {
                 Render();
             }
-        } 
+        }
     }
 
     private double _functionXFactor = 100;
@@ -207,25 +207,28 @@ public class ViewModel : BindableBase
 
         BuchheimWalker.VerticalMargin = TreeVerticalSpacing;
         BuchheimWalker.HorizontalMargin = TreeHorizontalSpacing;
-        new BuchheimWalker().Run(VisualTree);
+        var walker = new BuchheimWalker();
+        walker.Run(VisualTree);
 
         var queue = new Queue<VisualNode>(new[] { VisualTree });
         var actualWidth = _window.TreeCanvas.ActualWidth == 0 ? 500 : _window.TreeCanvas.ActualWidth;
-        var mid = actualWidth / 2;
+        var mid = (actualWidth / 2);
+
+        var graphWidthOffset = -(walker.MinX.Value + walker.TotalWidth / 2);
 
         while (queue.Count > 0)
         {
             var current = queue.Dequeue();
 
-            Canvas.SetLeft(current.Grid, current.X + mid - (current.Width / 2));
+            Canvas.SetLeft(current.Grid, current.X + graphWidthOffset + mid - (current.Width / 2));
             Canvas.SetTop(current.Grid, current.Y + BuchheimWalker.VerticalMargin);
 
             foreach (var child in current.Children)
             {
                 queue.Enqueue(child);
 
-                child.Line!.X1 = current.X + current.Width * 0.5 + mid - (current.Width / 2);
-                child.Line!.X2 = child.X + child.Width * 0.5 + mid - (child.Width / 2);
+                child.Line!.X1 = current.X + graphWidthOffset + current.Width * 0.5 + mid - (current.Width / 2);
+                child.Line!.X2 = child.X + graphWidthOffset + child.Width * 0.5 + mid - (child.Width / 2);
                 child.Line!.Y1 = current.Y + current.Height * 0.5 + BuchheimWalker.VerticalMargin;
                 child.Line!.Y2 = child.Y + child.Height * 0.5 + BuchheimWalker.VerticalMargin;
             }
@@ -295,7 +298,7 @@ public class ViewModel : BindableBase
 public partial class MainWindow
 {
     public ViewModel ViewModel { get; }
-    
+
     public MainWindow()
     {
         InitializeComponent();
