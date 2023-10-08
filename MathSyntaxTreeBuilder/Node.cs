@@ -42,7 +42,17 @@ public class NodeOp : Node
     public NodeOp(Op op, int scopeDepth) : base(scopeDepth) { Op = op; }
 
     public override string ToString() => Op.Name;
-    public override string BuildExpression() => $"{Op.ToStringFunc(this)}";
+
+    public override string BuildExpression()
+    {
+        if (Parent != null && Parent.ScopeDepth > -1 && Parent.ScopeDepth < ScopeDepth && Parent is NodeOp op && !op.Op.IsNamedFunction)
+        {
+            return $"({Op.ToStringFunc(this)})";
+        }
+
+        return $"{Op.ToStringFunc(this)}";
+
+    }
     public override double Eval(Dictionary<string, double>? variables = null) => Op.EvalFunc(this, variables);
     public override string Name => Op.Name;
 
@@ -82,7 +92,7 @@ public class NodeOp : Node
         // the argument goes with the more important node
         // so to where we tried to insert the node originally
         // eg.: 1*2+4, the argument '2' goes to the more important *
-        if (argument != null)
+        if (!string.IsNullOrEmpty(argument))
         {
             AddArg(argument);
         }

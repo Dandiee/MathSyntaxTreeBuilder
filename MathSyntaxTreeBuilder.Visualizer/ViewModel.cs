@@ -77,7 +77,7 @@ public class ViewModel : BindableBase
             if (SetProperty(ref _tree, value))
             {
                 VisualTree = value == null ? null : ToVisualTree(value);
-                Result = value == null 
+                Result = value == null
                     ? null
                     : value.Variables.Count > 0
                         ? $"Depends on variable(s): {{{value.VariablesText}}}"
@@ -189,22 +189,31 @@ public class ViewModel : BindableBase
         var totalRange = actualWidth / FunctionXFactor;
 
         var vars = new Dictionary<string, double>();
-        for (var x = totalRange / -2d; x <= totalRange; x += .01)
+        try
         {
-            vars[variableName] = x;
-            var y = _tree.Eval(vars);
-            if (!double.IsNaN(y))
+            for (var x = totalRange / -2d; x <= totalRange; x += .01)
             {
-                poly.Points.Add(new Point(x * FunctionXFactor + o.X, y * -FunctionYFactor + o.Y));
-            }
-            else
-            {
-                if (poly.Points.Count > 2)
+                vars[variableName] = x;
+
+                var y = _tree.Eval(vars);
+                if (!double.IsNaN(y))
                 {
-                    c.Children.Add(poly);
-                    poly = new Polyline() { Stroke = Brushes.Red, StrokeThickness = 2 };
+                    poly.Points.Add(new Point(x * FunctionXFactor + o.X, y * -FunctionYFactor + o.Y));
+                }
+                else
+                {
+                    if (poly.Points.Count > 2)
+                    {
+                        c.Children.Add(poly);
+                        poly = new Polyline() { Stroke = Brushes.Red, StrokeThickness = 2 };
+                    }
                 }
             }
+
+        }
+        catch
+        {
+            return;
         }
 
         if (poly.Points.Count > 2)

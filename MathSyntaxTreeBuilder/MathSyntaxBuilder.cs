@@ -32,28 +32,16 @@ public class MathSyntaxBuilder
             {
                 if (token != string.Empty) // it's not just simple scoping
                 {
-
-                    // named ops: "sin", "cos", "min", "max", ...
                     if (Op.ByKeys.TryGetValue(token, out var op))
                     {
                         node = node.AddOp(new NodeOp(op, depth), null);
                         token = string.Empty;
                     }
-                    else throw new Exception("Syntax error");
-
-                    //else Debug.Assert(false, "Hidden multiplication is not supported yet.");
-                    //TODO: it must be a hidden multiplication
-                    // implicit multiplication is all over the place, examples:
-                    // 2x, (1+2)(3+4), -cos(1), -5sin(1), even 1--1 can be a impl mul
-                    //{ 
-                    //
-                    //    var mulArg = token == "-"
-                    //        ? "-1"
-                    //        : token;
-                    //
-                    //    node = node.AddOp(new NodeOp(Op.Mul, depth), mulArg);
-                    //    token = string.Empty;
-                    //}
+                    else
+                    {
+                        node = node.AddOp(new NodeOp(Op.Mul, depth), token);
+                        token = string.Empty;
+                    }
                 }
 
                 depth++;
@@ -67,11 +55,22 @@ public class MathSyntaxBuilder
                     token += "-";
                     continue;
                 }
-
+                
                 node = node.AddOp(new NodeOp(op, depth), token);
                 token = string.Empty;
             }
-            else token += c.ToString();
+            else
+            {
+                if (token != string.Empty && double.TryParse(token, out _) && !char.IsDigit(c))
+                {
+                    node = node.AddOp(new NodeOp(Op.Mul, depth), token);
+                    token = c.ToString();
+                }
+                else
+                {
+                    token += c.ToString();
+                }
+            }
         }
 
         if (token.Length > 0)
