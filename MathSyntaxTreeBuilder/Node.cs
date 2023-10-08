@@ -41,6 +41,20 @@ public class NodeRoot : NodeOp
 
         VariablesText = string.Join(", ", DependsOn);
     }
+
+    public void AssertRelationships()
+    {
+        var queue = new Queue<Node>(new[] { this });
+        while (queue.Count > 0)
+        {
+            var current = queue.Dequeue();
+            foreach (var child in current.Children)
+            {
+                Debug.Assert(child.Parent == current);
+                queue.Enqueue(child);
+            }
+        }
+    }
 }
 
 

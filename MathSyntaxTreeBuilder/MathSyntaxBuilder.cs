@@ -83,7 +83,9 @@ public class MathSyntaxBuilder
         root.LastOperation = node;
 
         root.CalculateVariables();
-
+#if DEBUG
+        root.AssertRelationships();
+#endif
         return root;
     }
 
