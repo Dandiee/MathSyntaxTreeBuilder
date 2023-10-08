@@ -2,7 +2,8 @@
 
 internal class BuchheimWalker
 {
-    private double[] depths = new double[10];
+    //private double[] depths = new double[10];
+    private List<double> Depths = new ();
     private int maxDepth;
     public static double HorizontalMargin = 30;
     public static double VerticalMargin = 30;
@@ -25,12 +26,23 @@ internal class BuchheimWalker
     private void UpdateDepths(int depth, VisualNode item)
     {
         var d = item.Height;
-        if (depths.Length <= depth)
+        //if (depths.Length <= depth)
+        //{
+        //    //depths = new double[3 * depth / 2];
+        //    //depths = new double[3 * depth / 2];
+        //}
+
+        if (depth < Depths.Count)
         {
-            depths = new double[3 * depth / 2];
+            Depths[depth] = Math.Max(Depths[depth], d);
+        }
+        else
+        {
+            Depths.Add(d);
         }
 
-        depths[depth] = Math.Max(depths[depth], d);
+        //Depths.Add(Math.Max(depths[depth], d));
+        //depths[depth] = Math.Max(depths[depth], d);
         maxDepth = Math.Max(maxDepth, depth);
     }
 
@@ -38,7 +50,7 @@ internal class BuchheimWalker
     {
         for (var i = 1; i < maxDepth; ++i)
         {
-            depths[i] += depths[i - 1];
+            Depths[i] += Depths[i - 1];
         }
     }
 
@@ -172,7 +184,7 @@ internal class BuchheimWalker
     private void SecondWalk(VisualNode n, double m, int depth)
     {
         n.X = n.Prelim + m;
-        n.Y = depths[depth] + depth * VerticalMargin;
+        n.Y = Depths[depth] + depth * VerticalMargin;
 
         if (MinX == null || MinX > n.X)
         {

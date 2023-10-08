@@ -158,15 +158,23 @@ public class NodeOp : Node
 
         // the found node must be re-parented
         // for eg.: 1*5+6, the new node '+' must be created as a new parent for the '*'
-        newHead.Children.Remove(oldChild);        
-        newHead.Children.Add(nodeToAdd);
 
-        nodeToAdd.Parent = newHead;
-        nodeToAdd.Children.Add(oldChild);
-        oldChild.Parent = nodeToAdd;
-        this.Parent = oldChild;
-
+        newHead.RemoveChild(oldChild);
+        nodeToAdd.AddChild(oldChild);
+        newHead.AddChild(nodeToAdd);
         return nodeToAdd;
+    }
+
+    private void AddChild(Node child)
+    {
+        Children.Add(child);
+        child.Parent = this;
+    }
+
+    private void RemoveChild(Node child)
+    {
+        child.Parent = null;
+        Children.Remove(child);
     }
 
     public void AddDependency(string variableName)
