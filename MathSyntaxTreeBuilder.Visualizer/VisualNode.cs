@@ -1,4 +1,5 @@
-﻿using System.Reflection.Metadata.Ecma335;
+﻿using System.Diagnostics;
+using System.Reflection.Metadata.Ecma335;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -91,12 +92,15 @@ public class VisualNode
             _canvas.Children.Add(Line);
             Panel.SetZIndex(Line, -1);
         }
-
-        Background = Node is NodeOp
-            ? Node is NodeRoot
-                ? Brushes.DeepSkyBlue
-                : Brushes.White
-            : Brushes.DarkGray;
+        Background = Node switch
+        {
+            NodeRoot => Brushes.DeepSkyBlue,
+            NodeOp op => op.DependsOn.Count > 0 ? Brushes.Pink : Brushes.White,
+            NodeNamedConstant => Brushes.Orange,
+            NodeUserConstant => Brushes.Aquamarine,
+            NodeVariable => Brushes.IndianRed,
+            _ => throw new()
+        };
 
         Grid = new Grid();
 

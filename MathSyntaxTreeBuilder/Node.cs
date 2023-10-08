@@ -21,8 +21,8 @@ public class NodeRoot : NodeOp
     public string LeftOverToken { get; set; } = string.Empty;
     public int CurrentDepth { get; set; }
     public NodeOp LastOperation { get; set; }
-    public HashSet<string> Variables { get; } = new(StringComparer.OrdinalIgnoreCase);
-    public string VariablesText => string.Join(", ", Variables);
+    public List<NodeVariable> VariableNodes { get; } = new();
+    public string VariablesText { get; private set; }
     public override string BuildExpression() => Children[0].BuildExpression();
     public override double Eval(Dictionary<string, double>? variables = null) => Children[0].Eval(variables);
     public override string Name => "Identity";
@@ -31,12 +31,24 @@ public class NodeRoot : NodeOp
     {
         LastOperation = this;
     }
+
+    public void CalculateVariables()
+    {
+        foreach (var variableNode in VariableNodes)
+        {
+            (variableNode.Parent as NodeOp).AddDependency(variableNode.Name);
+        }
+
+        VariablesText = string.Join(", ", DependsOn);
+    }
 }
 
 
 [DebuggerDisplay("{Op.Name}")]
 public class NodeOp : Node
 {
+    public HashSet<string> DependsOn { get; } = new(StringComparer.OrdinalIgnoreCase);
+
     public readonly Op Op;
 
     public NodeOp(Op op, int scopeDepth) : base(scopeDepth) { Op = op; }
@@ -56,17 +68,20 @@ public class NodeOp : Node
     public override double Eval(Dictionary<string, double>? variables = null) => Op.EvalFunc(this, variables);
     public override string Name => Op.Name;
 
-    public void AddArg(string value)
+    public void AddArg(string argument)
     {
-        if (NodeNamedConstant.Constants.ContainsKey(value))
+        if (NodeNamedConstant.Constants.ContainsKey(argument))
         {
-            Children.Add(new NodeNamedConstant(value, ScopeDepth));
+            Children.Add(new NodeNamedConstant(this, argument, ScopeDepth));
         }
-        else if (double.TryParse(value, out var numericalValue))
+        else if (double.TryParse(argument, out var numericalValue))
         {
-            Children.Add(new NodeUserConstant(ScopeDepth, numericalValue));
+            Children.Add(new NodeUserConstant(this, ScopeDepth, numericalValue));
         }
-        else Children.Add(new NodeVariable(ScopeDepth, value));
+        else
+        {
+            Children.Add(new NodeVariable(this, ScopeDepth, argument));
+        }
     }
 
     public NodeOp AddOp(NodeOp nodeToAdd, string? argument)
@@ -143,14 +158,23 @@ public class NodeOp : Node
 
         // the found node must be re-parented
         // for eg.: 1*5+6, the new node '+' must be created as a new parent for the '*'
-        newHead.Children.Remove(oldChild);        // identity op 
+        newHead.Children.Remove(oldChild);        
         newHead.Children.Add(nodeToAdd);
 
         nodeToAdd.Parent = newHead;
         nodeToAdd.Children.Add(oldChild);
-        Parent = nodeToAdd;
+        oldChild.Parent = nodeToAdd;
+        this.Parent = oldChild;
 
         return nodeToAdd;
+    }
+
+    public void AddDependency(string variableName)
+    {
+        if (DependsOn.Add(variableName) && this.Parent is NodeOp op)
+        {
+            op.AddDependency(variableName);
+        }
     }
 }
 
@@ -166,8 +190,8 @@ public class NodeNamedConstant : NodeArg
         ["tau"] = Math.Tau,
     };
 
-    public NodeNamedConstant(string constName, int scopeDepth) 
-        : base(scopeDepth)
+    public NodeNamedConstant(NodeOp parent, string constName, int scopeDepth) 
+        : base(parent, scopeDepth)
     {
         Name = constName;
     }
@@ -183,8 +207,8 @@ public class NodeUserConstant : NodeArg
     public readonly double Value;
     public double Delta { get; set; }
 
-    public NodeUserConstant(int scopeDepth, double value) 
-        : base(scopeDepth)
+    public NodeUserConstant(NodeOp parent, int scopeDepth, double value) 
+        : base(parent, scopeDepth)
     {
         Value = value;
         Name = Value.ToString("N2");
@@ -199,10 +223,18 @@ public class NodeUserConstant : NodeArg
 
 public class NodeVariable : NodeArg
 {
-    public NodeVariable(int scopeDepth, string name) 
-        : base(scopeDepth)
+    public NodeVariable(NodeOp parent, int scopeDepth, string name) 
+        : base(parent, scopeDepth)
     {
         Name = name;
+
+        Node root = this;
+        while (root is not NodeRoot)
+        {
+            root = root.Parent;
+        }
+
+        ((NodeRoot)root).VariableNodes.Add(this);
     }
 
     public override string BuildExpression() => Name;
@@ -214,6 +246,9 @@ public class NodeVariable : NodeArg
 
 public abstract class NodeArg : Node
 {
-    protected NodeArg(int depth)
-        : base(depth) { }
+    protected NodeArg(NodeOp parent, int depth)
+        : base(depth)
+    {
+        Parent = parent;
+    }
 }

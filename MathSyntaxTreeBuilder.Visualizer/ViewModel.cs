@@ -79,7 +79,7 @@ public class ViewModel : BindableBase
                 VisualTree = value == null ? null : ToVisualTree(value);
                 Result = value == null
                     ? null
-                    : value.Variables.Count > 0
+                    : value.DependsOn.Count > 0
                         ? $"Depends on variable(s): {{{value.VariablesText}}}"
                         : $"{value.Eval()}";
                 OutputExpression = value?.BuildExpression();
@@ -181,9 +181,9 @@ public class ViewModel : BindableBase
         c.Children.Add(new Line { X1 = o.X, X2 = o.X, Y1 = 0, Y2 = actualHeight, Stroke = Brushes.Yellow });
 
         if (_tree == null) return;
-        if (_tree.Variables.Count != 1) return;
+        if (_tree.DependsOn.Count != 1) return;
 
-        var variableName = _tree.Variables.First();
+        var variableName = _tree.DependsOn.First();
 
         var poly = new Polyline { Stroke = Brushes.Red, StrokeThickness = 2 };
         var totalRange = actualWidth / FunctionXFactor;

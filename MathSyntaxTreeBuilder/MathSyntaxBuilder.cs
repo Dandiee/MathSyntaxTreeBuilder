@@ -82,29 +82,11 @@ public class MathSyntaxBuilder
         root.CurrentDepth = depth;
         root.LastOperation = node;
 
-        FinalizeRoot(root);
+        root.CalculateVariables();
 
         return root;
     }
 
-    private static void FinalizeRoot(NodeRoot root)
-    {
-        var queue = new Queue<Node>(new Node[] { root });
-        while (queue.Count > 0)
-        {
-            var node = queue.Dequeue();
-            if (node is NodeVariable variable)
-            {
-                root.Variables.Add(variable.Name);
-            }
-            else
-            {
-                foreach (var child in node.Children)
-                {
-                    queue.Enqueue(child);
-                }
-            }
-        }
-    }
+  
 
 }
