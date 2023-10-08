@@ -154,7 +154,7 @@ public class VisualNode
             IsDragged = true;
             _dragStartPos = args.GetPosition(_canvas);
             MainBorder.Background = Brushes.YellowGreen;
-            if (Node is NodeArg arg && arg.IsNumerical)
+            if (Node is NodeUserConstant arg)
             {
                 _dragStartValue = arg.Delta;
             }
@@ -166,12 +166,12 @@ public class VisualNode
             if (IsDragged)
             {
                 MainBorder.Background = Brushes.Red;
-                if (Node is NodeArg arg && arg.IsNumerical)
+                if (Node is NodeUserConstant arg)
                 {
                     var newPos = args.GetPosition(_canvas);
                     var delta = (_dragStartPos!.Value.Y - newPos.Y) / 20;
                     arg.Delta = _dragStartValue.Value + delta;
-                    MainTextBlock.Text = (arg.DoubleValue + arg.Delta).ToString("N2");
+                    MainTextBlock.Text = (arg.Value + arg.Delta).ToString("N2");
                     _owner.DrawFunction();
                 }
             }

@@ -56,7 +56,18 @@ public class NodeOp : Node
     public override double Eval(Dictionary<string, double>? variables = null) => Op.EvalFunc(this, variables);
     public override string Name => Op.Name;
 
-    public void AddArg(string value) => Children.Add(new NodeArg(value, ScopeDepth + 1));
+    public void AddArg(string value)
+    {
+        if (NodeNamedConstant.Constants.ContainsKey(value))
+        {
+            Children.Add(new NodeNamedConstant(value, ScopeDepth));
+        }
+        else if (double.TryParse(value, out var numericalValue))
+        {
+            Children.Add(new NodeUserConstant(ScopeDepth, numericalValue));
+        }
+        else Children.Add(new NodeVariable(ScopeDepth, value));
+    }
 
     public NodeOp AddOp(NodeOp nodeToAdd, string? argument)
     {
@@ -143,9 +154,11 @@ public class NodeOp : Node
     }
 }
 
-[DebuggerDisplay("{Value}")]
-public class NodeArg : Node
+
+public class NodeNamedConstant : NodeArg
 {
+    public override string Name { get; }
+
     public static readonly IReadOnlyDictionary<string, double> Constants = new Dictionary<string, double>(StringComparer.OrdinalIgnoreCase)
     {
         ["pi"] = Math.PI,
@@ -153,41 +166,54 @@ public class NodeArg : Node
         ["tau"] = Math.Tau,
     };
 
-    public readonly string Value;
-    public readonly double DoubleValue;
-    public readonly string VariableName;
-    public readonly bool IsNumerical;
-    public double Delta = 0;
-
-    public NodeArg(string value, int depth)
-        : base(depth)
+    public NodeNamedConstant(string constName, int scopeDepth) 
+        : base(scopeDepth)
     {
-        Value = value;
-
-        if (Constants.TryGetValue(value, out var constValue))
-        {
-            Value = value.ToLowerInvariant();
-            DoubleValue = constValue;
-            IsNumerical = true;
-        }
-        else if (double.TryParse(value, out var doubleValue))
-        {
-            IsNumerical = true;
-            DoubleValue = doubleValue;
-            Value = doubleValue.ToString("N2");
-        }
-        else
-        {
-            VariableName = value;
-        }
-
+        Name = constName;
     }
 
-    public override string ToString() => Value;
-    public override string BuildExpression() => Value;
+    public override string BuildExpression() => Name;
 
-    public override double Eval(Dictionary<string, double>? variables = null)
-        => IsNumerical ? DoubleValue + Delta : variables[VariableName];
+    public override double Eval(Dictionary<string, double>? variables = null) => Constants[Name];
+    
+}
 
-    public override string Name => Value;
+public class NodeUserConstant : NodeArg
+{
+    public readonly double Value;
+    public double Delta { get; set; }
+
+    public NodeUserConstant(int scopeDepth, double value) 
+        : base(scopeDepth)
+    {
+        Value = value;
+        Name = Value.ToString("N2");
+    }
+
+    public override string BuildExpression() => Value.ToString("N2");
+
+    public override double Eval(Dictionary<string, double>? variables = null) => Value + Delta;
+
+    public override string Name { get; }
+}
+
+public class NodeVariable : NodeArg
+{
+    public NodeVariable(int scopeDepth, string name) 
+        : base(scopeDepth)
+    {
+        Name = name;
+    }
+
+    public override string BuildExpression() => Name;
+
+    public override double Eval(Dictionary<string, double>? variables = null) => variables![Name];
+
+    public override string Name { get; }
+}
+
+public abstract class NodeArg : Node
+{
+    protected NodeArg(int depth)
+        : base(depth) { }
 }

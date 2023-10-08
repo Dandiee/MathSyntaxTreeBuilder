@@ -55,7 +55,7 @@ public class MathSyntaxBuilder
                     token += "-";
                     continue;
                 }
-                
+
                 node = node.AddOp(new NodeOp(op, depth), token);
                 token = string.Empty;
             }
@@ -93,12 +93,9 @@ public class MathSyntaxBuilder
         while (queue.Count > 0)
         {
             var node = queue.Dequeue();
-            if (node is NodeArg arg)
+            if (node is NodeVariable variable)
             {
-                if (!arg.IsNumerical)
-                {
-                    root.Variables.Add(arg.Value);
-                }
+                root.Variables.Add(variable.Name);
             }
             else
             {
