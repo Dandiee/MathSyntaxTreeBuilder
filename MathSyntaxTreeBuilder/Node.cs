@@ -110,6 +110,7 @@ public class NodeOp : Node
         var nodeToAddIsMoreImportant =
             /*nodeToAdd.Op.Equals(Op.Pow) || nodeToAdd.Op.Equals(Op.PowChar)*/ false ||
             (nodeToAdd.ScopeDepth == ScopeDepth
+                
                 ? nodeToAdd.Op.Precedent >= Op.Precedent
                 : nodeToAdd.ScopeDepth >= ScopeDepth);
 
@@ -162,11 +163,11 @@ public class NodeOp : Node
             // the '<' for the scopeDepth is just as good as '<='
             // because when the  depths are equal, the depths wont matter anymore
             isSufficient = newHead.ScopeDepth == nodeToAdd.ScopeDepth
-                ?  newHead.Op.Equals(Op.PowChar) && nodeToAdd.Op.Equals(Op.PowChar)
-                    // pow (the char '^' only) is more complicated, it acts to the right, not to the left
-                    // so the < becomes <=
-                    ? newHead.Op.Precedent <= nodeToAdd.Op.Precedent
-                    : newHead.Op.Precedent < nodeToAdd.Op.Precedent
+                ?  newHead.Op.Equals(Op.PowChar) && nodeToAdd.Op.Equals(Op.PowChar) // right-to-left associative operators
+                                                                                    // pow (the char '^' only) is more complicated, it acts to the right, not to the left
+                                                                                    // so the < becomes <=
+                    ? newHead.Op.Precedent <= nodeToAdd.Op.Precedent // right-to-left associative operators
+                    : newHead.Op.Precedent < nodeToAdd.Op.Precedent // left-to-right associative operators
                 : newHead.ScopeDepth < nodeToAdd.ScopeDepth;
 
             if (isSufficient)
