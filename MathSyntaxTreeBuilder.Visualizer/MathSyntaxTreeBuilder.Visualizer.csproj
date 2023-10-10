@@ -9,11 +9,83 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Resources\Fonts\latinmodern-math.otf" />
+    <None Remove="Resources\Fonts\lmroman10-bold.otf" />
+    <None Remove="Resources\Fonts\lmroman10-bolditalic.otf" />
+    <None Remove="Resources\Fonts\lmroman10-italic.otf" />
+    <None Remove="Resources\Fonts\lmroman10-regular.otf" />
+    <None Remove="Resources\Fonts\lmroman12-bold.otf" />
+    <None Remove="Resources\Fonts\lmroman12-italic.otf" />
+    <None Remove="Resources\Fonts\lmroman12-regular.otf" />
+    <None Remove="Resources\Fonts\lmroman17-regular.otf" />
+    <None Remove="Resources\Fonts\lmroman5-bold.otf" />
+    <None Remove="Resources\Fonts\lmroman5-regular.otf" />
+    <None Remove="Resources\Fonts\lmroman6-bold.otf" />
+    <None Remove="Resources\Fonts\lmroman6-regular.otf" />
+    <None Remove="Resources\Fonts\lmroman7-bold.otf" />
+    <None Remove="Resources\Fonts\lmroman7-italic.otf" />
+    <None Remove="Resources\Fonts\lmroman7-regular.otf" />
+    <None Remove="Resources\Fonts\lmroman8-bold.otf" />
+    <None Remove="Resources\Fonts\lmroman8-italic.otf" />
+    <None Remove="Resources\Fonts\lmroman8-regular.otf" />
+    <None Remove="Resources\Fonts\lmroman9-bold.otf" />
+    <None Remove="Resources\Fonts\lmroman9-italic.otf" />
+    <None Remove="Resources\Fonts\lmroman9-regular.otf" />
+    <None Remove="Resources\Fonts\lmromancaps10-oblique.otf" />
+    <None Remove="Resources\Fonts\lmromancaps10-regular.otf" />
+    <None Remove="Resources\Fonts\lmromandunh10-oblique.otf" />
+    <None Remove="Resources\Fonts\lmromandunh10-regular.otf" />
+    <None Remove="Resources\Fonts\lmromanslant10-bold.otf" />
+    <None Remove="Resources\Fonts\lmromanslant10-regular.otf" />
+    <None Remove="Resources\Fonts\lmromanslant12-regular.otf" />
+    <None Remove="Resources\Fonts\lmromanslant17-regular.otf" />
+    <None Remove="Resources\Fonts\lmromanslant8-regular.otf" />
+    <None Remove="Resources\Fonts\lmromanslant9-regular.otf" />
+    <None Remove="Resources\Fonts\lmromanunsl10-regular.otf" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Prism.Wpf" Version="8.1.97" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\MathSyntaxTreeBuilder\MathSyntaxTreeBuilder.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Resources\Fonts\latinmodern-math.otf" />
+    <Resource Include="Resources\Fonts\lmroman10-bold.otf" />
+    <Resource Include="Resources\Fonts\lmroman10-bolditalic.otf" />
+    <Resource Include="Resources\Fonts\lmroman10-italic.otf" />
+    <Resource Include="Resources\Fonts\lmroman10-regular.otf" />
+    <Resource Include="Resources\Fonts\lmroman12-bold.otf" />
+    <Resource Include="Resources\Fonts\lmroman12-italic.otf" />
+    <Resource Include="Resources\Fonts\lmroman12-regular.otf" />
+    <Resource Include="Resources\Fonts\lmroman17-regular.otf" />
+    <Resource Include="Resources\Fonts\lmroman5-bold.otf" />
+    <Resource Include="Resources\Fonts\lmroman5-regular.otf" />
+    <Resource Include="Resources\Fonts\lmroman6-bold.otf" />
+    <Resource Include="Resources\Fonts\lmroman6-regular.otf" />
+    <Resource Include="Resources\Fonts\lmroman7-bold.otf" />
+    <Resource Include="Resources\Fonts\lmroman7-italic.otf" />
+    <Resource Include="Resources\Fonts\lmroman7-regular.otf" />
+    <Resource Include="Resources\Fonts\lmroman8-bold.otf" />
+    <Resource Include="Resources\Fonts\lmroman8-italic.otf" />
+    <Resource Include="Resources\Fonts\lmroman8-regular.otf" />
+    <Resource Include="Resources\Fonts\lmroman9-bold.otf" />
+    <Resource Include="Resources\Fonts\lmroman9-italic.otf" />
+    <Resource Include="Resources\Fonts\lmroman9-regular.otf" />
+    <Resource Include="Resources\Fonts\lmromancaps10-oblique.otf" />
+    <Resource Include="Resources\Fonts\lmromancaps10-regular.otf" />
+    <Resource Include="Resources\Fonts\lmromandunh10-oblique.otf" />
+    <Resource Include="Resources\Fonts\lmromandunh10-regular.otf" />
+    <Resource Include="Resources\Fonts\lmromanslant10-bold.otf" />
+    <Resource Include="Resources\Fonts\lmromanslant10-regular.otf" />
+    <Resource Include="Resources\Fonts\lmromanslant12-regular.otf" />
+    <Resource Include="Resources\Fonts\lmromanslant17-regular.otf" />
+    <Resource Include="Resources\Fonts\lmromanslant8-regular.otf" />
+    <Resource Include="Resources\Fonts\lmromanslant9-regular.otf" />
+    <Resource Include="Resources\Fonts\lmromanunsl10-regular.otf" />
   </ItemGroup>
 
 </Project>

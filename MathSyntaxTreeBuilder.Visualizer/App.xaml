@@ -4,6 +4,10 @@
              xmlns:local="clr-namespace:MathSyntaxTreeBuilder.Visualizer"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
-         
-    </Application.Resources>
+        <ResourceDictionary>
+
+            <FontFamily x:Key="Math">/MathSyntaxTreeBuilder.Visualizer;component/Resources/Fonts/latinmodern-math.otf#Latin Modern Math</FontFamily>
+            <FontFamily x:Key="Math10">/MathSyntaxTreeBuilder.Visualizer;component/Resources/Fonts/lmromanunsl10-regular.otf#Latin Modern Roman Unslanted 10</FontFamily>
+        </ResourceDictionary>
+</Application.Resources>
 </Application>
