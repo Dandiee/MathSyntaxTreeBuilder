@@ -1,5 +1,20 @@
 ﻿namespace MathSyntaxTreeBuilder;
 
+public class OpComparer : IEqualityComparer<Op>
+{
+    public static readonly OpComparer Instance = new();
+
+    public bool Equals(Op x, Op y)
+    {
+        return x.Precedent == y.Precedent && x.Name == y.Name && x.OperandsCount == y.OperandsCount && x.ToStringFunc.Equals(y.ToStringFunc) && x.IsNamedFunction == y.IsNamedFunction && x.EvalFunc.Equals(y.EvalFunc) && x.IsMultiVariableFunction == y.IsMultiVariableFunction;
+    }
+
+    public int GetHashCode(Op obj)
+    {
+        return HashCode.Combine(obj.Precedent, obj.Name, obj.OperandsCount, obj.ToStringFunc, obj.IsNamedFunction, obj.EvalFunc, obj.IsMultiVariableFunction);
+    }
+}
+
 public struct Op
 {
     public static Random Rnd = new(564654);

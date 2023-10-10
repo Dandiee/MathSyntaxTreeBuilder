@@ -154,6 +154,7 @@ public class ViewModel : BindableBase
 
     public ICommand TreeCanvasSizeChanged { get; }
     public ICommand FunctionCanvasSizeChanged { get; }
+    public ICommand ReduceCommand { get; }
 
     public ViewModel(MainWindow window)
     {
@@ -161,6 +162,12 @@ public class ViewModel : BindableBase
         UserInput = DefaultInput;
         TreeCanvasSizeChanged = new DelegateCommand<SizeChangedEventArgs>(ResizeTree);
         FunctionCanvasSizeChanged = new DelegateCommand<SizeChangedEventArgs>(ResizeFunction);
+        ReduceCommand = new DelegateCommand(Reduce);
+    }
+
+    private void Reduce()
+    {
+        
     }
 
     private void Render()

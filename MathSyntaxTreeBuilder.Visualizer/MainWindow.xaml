@@ -81,20 +81,27 @@
             </Grid.RowDefinitions>
 
             <!-- Tree Canvas -->
-            <Canvas ClipToBounds="True" x:Name="TreeCanvas" Background="DarkSlateGray" HorizontalAlignment="Stretch">
-                <b:Interaction.Triggers>
-                    <b:EventTrigger EventName="SizeChanged">
-                        <b:InvokeCommandAction Command="{Binding TreeCanvasSizeChanged}" PassEventArgsToCommand="True"/>
-                    </b:EventTrigger>
-                </b:Interaction.Triggers>
-            </Canvas>
+            <Grid >
+                <Canvas ClipToBounds="True" x:Name="TreeCanvas" HorizontalAlignment="Stretch"
+                        Background="DarkSlateGray">
+                    <b:Interaction.Triggers>
+                        <b:EventTrigger EventName="SizeChanged">
+                            <b:InvokeCommandAction Command="{Binding TreeCanvasSizeChanged}" PassEventArgsToCommand="True"/>
+                        </b:EventTrigger>
+                    </b:Interaction.Triggers>
+                </Canvas>
+                <Button Content="Reduce" Padding="10" Margin="10"
+                        Command="{Binding ReduceCommand}"
+                        HorizontalAlignment="Left" VerticalAlignment="Top"/>
+            </Grid>
+            
 
             <!-- Tree Details -->
             <Grid Grid.Row="1" Margin="10">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="80"/>
-                    <ColumnDefinition Width="80"/>
-                    <ColumnDefinition Width="80"/>
+                    <ColumnDefinition Width="90"/>
+                    <ColumnDefinition Width="90"/>
+                    <ColumnDefinition Width="90"/>
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
                 <Grid.RowDefinitions>
@@ -123,6 +130,9 @@
 
                 <TextBlock Foreground="White" Grid.Row="2" Grid.Column="2" Text="H. Spacing" />
                 <Slider Grid.Row="2" Grid.Column="3" Value="{Binding TreeHorizontalSpacing}" Minimum="0" Maximum="100"/>
+
+                <TextBlock Foreground="White" Grid.Row="3" Grid.Column="2" Text="Is polynomial"/>
+                <TextBlock Grid.Row="3" Grid.Column="3"  Text="{Binding Tree.IsPolynomial}"/>
 
             </Grid>
 
