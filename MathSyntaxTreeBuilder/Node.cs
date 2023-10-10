@@ -107,9 +107,11 @@ public class NodeOp : Node
         // it's a more important node
         // the new node is *, the last is +, so the new must be deeper
         // add node to the current children
-        var nodeToAddIsMoreImportant = nodeToAdd.ScopeDepth == ScopeDepth
-            ? nodeToAdd.Op.Precedent >= Op.Precedent
-            : nodeToAdd.ScopeDepth >= ScopeDepth;
+        var nodeToAddIsMoreImportant =
+            /*nodeToAdd.Op.Equals(Op.Pow) || nodeToAdd.Op.Equals(Op.PowChar)*/ false ||
+            (nodeToAdd.ScopeDepth == ScopeDepth
+                ? nodeToAdd.Op.Precedent >= Op.Precedent
+                : nodeToAdd.ScopeDepth >= ScopeDepth);
 
 
         if (nodeToAddIsMoreImportant)
@@ -160,7 +162,11 @@ public class NodeOp : Node
             // the '<' for the scopeDepth is just as good as '<='
             // because when the  depths are equal, the depths wont matter anymore
             isSufficient = newHead.ScopeDepth == nodeToAdd.ScopeDepth
-                ? newHead.Op.Precedent < nodeToAdd.Op.Precedent
+                ?  newHead.Op.Equals(Op.PowChar) && nodeToAdd.Op.Equals(Op.PowChar)
+                    // pow (the char '^' only) is more complicated, it acts to the right, not to the left
+                    // so the < becomes <=
+                    ? newHead.Op.Precedent <= nodeToAdd.Op.Precedent
+                    : newHead.Op.Precedent < nodeToAdd.Op.Precedent
                 : newHead.ScopeDepth < nodeToAdd.ScopeDepth;
 
             if (isSufficient)
@@ -216,7 +222,7 @@ public class NodeNamedConstant : NodeArg
         ["tau"] = Math.Tau,
     };
 
-    public NodeNamedConstant(NodeOp parent, string constName, int scopeDepth) 
+    public NodeNamedConstant(NodeOp parent, string constName, int scopeDepth)
         : base(parent, scopeDepth)
     {
         Name = constName;
@@ -225,7 +231,7 @@ public class NodeNamedConstant : NodeArg
     public override string BuildExpression() => Name;
 
     public override double Eval(Dictionary<string, double>? variables = null) => Constants[Name];
-    
+
 }
 
 public class NodeUserConstant : NodeArg
@@ -233,15 +239,15 @@ public class NodeUserConstant : NodeArg
     public readonly double Value;
     public double Delta { get; set; }
 
-    public NodeUserConstant(NodeOp parent, int scopeDepth, double value) 
+    public NodeUserConstant(NodeOp parent, int scopeDepth, double value)
         : base(parent, scopeDepth)
     {
         Value = value;
         Name = Value.ToString("N2");
     }
 
-    public override string BuildExpression() => double.IsInteger(Value + Delta) 
-        ? (Value + Delta).ToString("N0") 
+    public override string BuildExpression() => double.IsInteger(Value + Delta)
+        ? (Value + Delta).ToString("N0")
         : (Value + Delta).ToString("N2");
 
     public override double Eval(Dictionary<string, double>? variables = null) => Value + Delta;
@@ -253,7 +259,7 @@ public class NodeVariable : NodeArg
 {
     public bool IsPolynomialTerm { get; private set; }
 
-    public NodeVariable(NodeOp parent, int scopeDepth, string name) 
+    public NodeVariable(NodeOp parent, int scopeDepth, string name)
         : base(parent, scopeDepth)
     {
         Name = name;

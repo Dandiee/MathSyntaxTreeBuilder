@@ -78,10 +78,11 @@
             <Grid.RowDefinitions>
                 <RowDefinition Height="*"/>
                 <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
             <!-- Tree Canvas -->
-            <Grid >
+            <Grid>
                 <Canvas ClipToBounds="True" x:Name="TreeCanvas" HorizontalAlignment="Stretch"
                         Background="DarkSlateGray">
                     <b:Interaction.Triggers>
@@ -95,9 +96,15 @@
                         HorizontalAlignment="Left" VerticalAlignment="Top"/>
             </Grid>
             
+            <Grid x:Name="MathExpressionGrid" Grid.Row="1"
+                  Background="Red"
+                  VerticalAlignment="Center">
+
+            </Grid>
+
 
             <!-- Tree Details -->
-            <Grid Grid.Row="1" Margin="10">
+            <Grid Grid.Row="2" Margin="10">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="90"/>
                     <ColumnDefinition Width="90"/>

@@ -77,6 +77,7 @@ public class ViewModel : BindableBase
             if (SetProperty(ref _tree, value))
             {
                 VisualTree = value == null ? null : ToVisualTree(value);
+                MathVisualExpression = value == null ? null : ToMathVisualNode(value);
                 Result = value == null
                     ? null
                     : value.DependsOn.Count > 0
@@ -96,6 +97,24 @@ public class ViewModel : BindableBase
             if (SetProperty(ref _visualTree, value))
             {
                 Render();
+            }
+        }
+    }
+
+    private MathVisualNode? _mathVisualExpression;
+    public MathVisualNode? MathVisualExpression
+    {
+        get => _mathVisualExpression;
+        set
+        {
+            if (SetProperty(ref _mathVisualExpression, value))
+            {
+                try
+                {
+                    DrawMathExpression();
+                }
+                catch { }
+                
             }
         }
     }
@@ -271,6 +290,13 @@ public class ViewModel : BindableBase
         }
     }
 
+    private void DrawMathExpression()
+    {
+        if (MathVisualExpression == null) return;
+        _window.MathExpressionGrid.Children.Clear();
+        _window.MathExpressionGrid.Children.Add(MathVisualExpression.GetVisual());
+    }
+
     private void ResizeTree(SizeChangedEventArgs e)
     {
         var halfDelta = (e.NewSize.Width - e.PreviousSize.Width) / 2;
@@ -322,6 +348,25 @@ public class ViewModel : BindableBase
             foreach (var child in current.Node.Children)
             {
                 var visualChild = new VisualNode(child, current, _window.TreeCanvas, this);
+                current.Children.Add(visualChild);
+                queue.Enqueue(visualChild);
+            }
+        }
+
+        return visualRoot;
+    }
+
+    public MathVisualNode ToMathVisualNode(NodeRoot root)
+    {
+        var visualRoot = new MathVisualNode(root, null, this);
+        var queue = new Queue<MathVisualNode>(new[] { visualRoot });
+
+        while (queue.Count > 0)
+        {
+            var current = queue.Dequeue();
+            foreach (var child in current.Node.Children)
+            {
+                var visualChild = new MathVisualNode(child, current, this);
                 current.Children.Add(visualChild);
                 queue.Enqueue(visualChild);
             }

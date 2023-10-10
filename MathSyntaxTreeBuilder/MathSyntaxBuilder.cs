@@ -61,7 +61,7 @@ public class MathSyntaxBuilder
             }
             else
             {
-                if (token != string.Empty && double.TryParse(token, out _) && !char.IsDigit(c))
+                if (token != string.Empty && double.TryParse(token, out _) && !char.IsDigit(c) && c != '.')
                 {
                     node = node.AddOp(new NodeOp(Op.Mul, depth), token);
                     token = c.ToString();
