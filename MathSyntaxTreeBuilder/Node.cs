@@ -40,6 +40,10 @@ public class NodeRoot : NodeOp
         foreach (var variableNode in VariableNodes)
         {
             (variableNode.Parent as NodeOp).AddDependency(variableNode.Name);
+        }
+
+        foreach (var variableNode in VariableNodes)
+        {
             IsPolynomial &= variableNode.UpdatePolynomial();
         }
 
