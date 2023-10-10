@@ -95,11 +95,14 @@
                         Command="{Binding ReduceCommand}"
                         HorizontalAlignment="Left" VerticalAlignment="Top"/>
             </Grid>
-            
-            <Grid x:Name="MathExpressionGrid" Grid.Row="1"
-                  Background="Red"
-                  VerticalAlignment="Center">
 
+            <Grid Background="Red" Grid.Row="1"
+                  VerticalAlignment="Center">
+                <StackPanel x:Name="MathExpressionGrid"
+                      Background="Red" Orientation="Horizontal"
+                      VerticalAlignment="Center">
+
+                </StackPanel>
             </Grid>
 
 
