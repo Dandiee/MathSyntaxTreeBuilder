@@ -186,6 +186,127 @@ public class ViewModel : BindableBase
 
     private void Reduce()
     {
+        if (Tree == null) return;
+
+        var stack = new Stack<Node>(new [] { Tree });
+        while (stack.Count > 0)
+        {
+            var current = stack.Pop();
+            
+
+            var currentOp = current as NodeOp;
+            var parentOp = current.Parent as NodeOp;
+
+            if (currentOp != null && parentOp != null)
+            {
+                if (currentOp.Op.Equals(Op.Mul) && currentOp.Children.All(c => c is NodeVariable))
+                {
+                    var newOperation = new NodeOp(Op.Pow, currentOp.ScopeDepth)
+                    {
+                        Parent = parentOp
+                    };
+                    newOperation.AddArg(currentOp.Children[0].Name);
+                    newOperation.AddArg("2");
+
+                    currentOp.Parent = null;
+
+                    parentOp.Children.Remove(currentOp);
+                    parentOp.Children.Add(newOperation);
+
+                    RefreshTree(); return;
+
+                }
+                else if (currentOp.Op.Equals(Op.Mul) && parentOp.Op.Equals(Op.Mul))
+                {
+                    var parVar = parentOp.Children.OfType<NodeVariable>().SingleOrDefault();
+                    var curVar = currentOp.Children.OfType<NodeVariable>().SingleOrDefault();
+
+                    if (parVar != null && curVar != null)
+                    {
+                        // drop the original var of the parent
+                        // it will be replaced with a new operation
+                        parentOp.Children.Remove(parVar);
+                        parVar.Parent = null;
+
+                        // create the new pow operation and fill it with arguments
+                        var newOperation = new NodeOp(Op.Pow, parVar.ScopeDepth)
+                        {
+                            Parent = parentOp
+                        };
+                        newOperation.AddArg(parVar.Name);
+                        newOperation.AddArg("2");
+
+                        // sew the new operation to its parent
+                        parentOp.Children.Add(newOperation);
+
+                        // kill the child
+                        parentOp.Children.Remove(currentOp);
+                        currentOp.Parent = null;
+                        current.Children.Remove(curVar);
+
+                        // only one child left at this point
+                        var transitiveChild = currentOp.Children.Single();
+                        transitiveChild.Parent = parentOp;
+                        parentOp.Children.Add(transitiveChild);
+
+                        RefreshTree(); return;
+                    }
+                }
+            }
+
+
+            foreach (var child in current.Children)
+            {
+                stack.Push(child);
+            }
+        }
+
+        return;
+        var variables = Tree.VariableNodes;
+        foreach (var variable in variables)
+        {
+            Node n = variable.Parent;
+            while (n != null)
+            {
+                if (n is not NodeOp op) break;
+
+                if (op.Op.Equals(Op.Mul))
+                {
+                    if (op.Children[0] is NodeVariable lhs && lhs.Name == variable.Name &&
+                        op.Children[1] is NodeVariable rhs && rhs.Name == variable.Name)
+                    {
+                        var newOp =  op.ReplaceLeafOperation(new NodeOp(Op.PowChar, op.ScopeDepth));
+                        newOp.AddArg(variable.Name);
+                        newOp.AddArg("2");
+
+                        goto here;
+                    }
+                }
+
+                if (op.Op.Equals(Op.PowChar))
+                {
+                    if (op.Children[0] is NodeVariable lhs && lhs.Name == variable.Name)
+                    {
+                        if (op.Children[1] is NodeUserConstant userConst
+                            || (op.Children[1] is NodeOp rhsOp && !rhsOp.DependsOn.Contains(variable.Name)))
+                        {
+
+                        }
+                    }
+                }
+
+                n = n.Parent;
+            }
+        }
+
+        here:
+        var temp = Tree;
+        //temp.VariableNodes.Clear();
+        temp.CalculateVariables();
+        temp.AssertRelationships();
+        Tree = null;
+        Tree = temp;
+
         
     }
 
@@ -194,6 +315,14 @@ public class ViewModel : BindableBase
         DrawTree();
         DrawFunction();
         AddTickChars();
+    }
+
+    private void RefreshTree()
+    {
+        var t = Tree;
+        t.AssertRelationships();
+        Tree = null;
+        Tree = t;
     }
 
     public void DrawFunction()
