@@ -2,7 +2,7 @@
 
 public class NodeUserConstant : NodeArg
 {
-    public readonly double Value;
+    public double Value;
     public double Delta { get; set; }
 
     public NodeUserConstant(NodeOp parent, int scopeDepth, double value)

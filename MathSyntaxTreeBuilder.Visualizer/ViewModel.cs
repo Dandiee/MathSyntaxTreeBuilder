@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using System.Globalization;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
@@ -193,13 +194,56 @@ public class ViewModel : BindableBase
         {
             var current = stack.Pop();
             
-
             var currentOp = current as NodeOp;
             var parentOp = current.Parent as NodeOp;
 
             if (currentOp != null && parentOp != null)
             {
-                if (currentOp.Op.Equals(Op.Mul) && currentOp.Children.All(c => c is NodeVariable))
+
+                if (currentOp.Op.Equals(Op.Mul) && 
+                    currentOp.Children.All(e => e is NodeOp cOp && 
+                                                (cOp.Op.Equals(Op.Pow) || cOp.Op.Equals(Op.PowChar))))
+                {
+                    var lhsPow = currentOp.Children[0] as NodeOp;
+                    var rhsPow = currentOp.Children[1] as NodeOp;
+
+                    if (lhsPow.Children[0] is NodeVariable lhsVar &&
+                        rhsPow.Children[0] is NodeVariable rhsVar &&
+                        lhsVar.Name == rhsVar.Name)
+                    {
+                        if (lhsPow.Children[1] is NodeUserConstant lhsConst &&
+                            rhsPow.Children[1] is NodeUserConstant rhsConst)
+                        {
+
+                        }
+                    }
+
+                }
+                else if ((currentOp.Op.Equals(Op.Pow) || currentOp.Op.Equals(Op.PowChar)) &&
+                    parentOp.Op.Equals(Op.Mul))
+                {
+                    var curLhs = currentOp.Children[0];
+                    var curRhs = currentOp.Children[1];
+
+                    if (curLhs is NodeVariable curLhsVar && curRhs is NodeUserConstant curRhsExp)
+                    {
+                        var parentOfParent = parentOp.Parent as NodeOp;
+                        parentOfParent.Children.Remove(parentOp);
+                        parentOp.Parent = null;
+
+                        var newOperation = new NodeOp(Op.Pow, parentOp.ScopeDepth);
+                        newOperation.AddArg(curLhs.Name);
+                        newOperation.AddArg((curRhsExp.Value + 1).ToString(CultureInfo.InvariantCulture));
+
+                        parentOfParent.Children.Add(newOperation);
+                        newOperation.Parent = parentOfParent;
+
+
+                        RefreshTree(); return;
+
+                    }
+                }
+                else if (currentOp.Op.Equals(Op.Mul) && currentOp.Children.All(c => c is NodeVariable))
                 {
                     var newOperation = new NodeOp(Op.Pow, currentOp.ScopeDepth)
                     {
