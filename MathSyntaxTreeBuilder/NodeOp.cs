@@ -13,7 +13,14 @@ public class NodeOp : Node
 
     public NodeOp(Op op, int scopeDepth) : base(scopeDepth) { Op = op; }
 
+    public NodeOp? ParentOp => Parent is NodeOp parentOp ? parentOp : null;
+
     public override string ToString() => Op.Name;
+
+    public void Kill()
+    {
+        ParentOp.RemoveChild(this);
+    }
 
     public override string BuildExpression()
     {
@@ -150,10 +157,18 @@ public class NodeOp : Node
         return nodeToAdd;
     }
 
-    private void AddChild(Node child)
+    public void AddChild(Node child, params string[]? args)
     {
         Children.Add(child);
         child.Parent = this;
+
+        if (args != null)
+        {
+            foreach (var arg in args)
+            {
+                AddArg(arg);
+            }
+        }
     }
 
     private void RemoveChild(Node child)

@@ -199,8 +199,73 @@ public class ViewModel : BindableBase
 
             if (currentOp != null && parentOp != null)
             {
+                if (false && currentOp.Op.Equals(Op.Mul))
+                {
+                    // its an x * x
+                    if (currentOp.Children.All(c => c is NodeVariable))
+                    {
+                        currentOp.Kill();
+                        parentOp.AddChild(new NodeOp(Op.PowChar, currentOp.ScopeDepth),
+                            currentOp.Children[0].AsVariable().Name, "2");
+                    }
+                    // its a 7 * 7
+                    else if (current.Children.All(c => c is NodeUserConstant))
+                    {
+                        currentOp.Kill();
+                        parentOp.AddArg(currentOp.Eval(null).ToString(CultureInfo.InvariantCulture));
+                    }
+                    else if (parentOp.Op.Equals(Op.Mul))
+                    {
 
-                if (currentOp.Op.Equals(Op.Mul) && 
+                    }
+                }
+
+                if (currentOp.Op.Equals(Op.Mul) && parentOp.Op.Equals(Op.Mul))
+                {
+                    if (parentOp.Children.Single(c => c != currentOp) is NodeUserConstant parentConst)
+                    {
+                        var curConst = currentOp.Children.OfType<NodeUserConstant>().FirstOrDefault();
+                        if (curConst != null)
+                        {
+                            var curOtherSide = currentOp.Children.Single(e => e != curConst);
+
+                            var newOperation = new NodeOp(Op.Mul, parentOp.ScopeDepth);
+                            newOperation.AddArg((curConst.Value * parentConst.Value).ToString(CultureInfo.InvariantCulture));
+                            newOperation.Children.Add(curOtherSide);
+
+                            curOtherSide.Parent = newOperation;
+
+                            parentOp.ParentOp.Children.Add(newOperation);
+                            newOperation.Parent = parentOp.ParentOp;
+
+                            parentOp.ParentOp.Children.Remove(parentOp);
+                            parentOp.Parent = null;
+                            
+
+                            RefreshTree(); return;
+
+                        }
+
+                    }
+                    else if (parentOp.Children.Single(c => c != currentOp) is NodeVariable parentVar)
+                    {
+                        var curConst = currentOp.Children.FirstOrDefault(c => c is NodeUserConstant);
+                        if (curConst != null)
+                        {
+                            parentOp.Children.Remove(parentVar);
+                            currentOp.Children.Remove(curConst);
+
+                            parentOp.Children.Add(curConst);
+                            currentOp.Children.Add(parentVar);
+
+                            curConst.Parent = parentOp;
+                            parentVar.Parent = currentOp;
+
+                            RefreshTree(); return;
+                        }
+                    }
+                }
+                else if (currentOp.Op.Equals(Op.Mul) && 
                     currentOp.Children.All(e => e is NodeOp cOp && 
                                                 (cOp.Op.Equals(Op.Pow) || cOp.Op.Equals(Op.PowChar))))
                 {
@@ -215,12 +280,22 @@ public class ViewModel : BindableBase
                             rhsPow.Children[1] is NodeUserConstant rhsConst)
                         {
 
+                            var newOperation = new NodeOp(Op.Pow, currentOp.ScopeDepth);
+                            newOperation.AddArg(lhsVar.Name);
+                            newOperation.AddArg((lhsConst.Value + rhsConst.Value).ToString(CultureInfo.InvariantCulture));
+
+                            parentOp.Children.Remove(currentOp);
+                            currentOp.Parent = null;
+
+                            parentOp.Children.Add(newOperation);
+                            newOperation.Parent = parentOp;
+                            RefreshTree(); return;
                         }
                     }
 
                 }
                 else if ((currentOp.Op.Equals(Op.Pow) || currentOp.Op.Equals(Op.PowChar)) &&
-                    parentOp.Op.Equals(Op.Mul))
+                    parentOp.Op.Equals(Op.Mul) && parentOp.Children.Count(c => c is NodeVariable) == 1)
                 {
                     var curLhs = currentOp.Children[0];
                     var curRhs = currentOp.Children[1];
@@ -379,6 +454,8 @@ public class ViewModel : BindableBase
         c.Children.Add(new Line { X1 = 0, X2 = actualWidth, Y1 = o.Y, Y2 = o.Y, Stroke = Brushes.Yellow });
         c.Children.Add(new Line { X1 = o.X, X2 = o.X, Y1 = 0, Y2 = actualHeight, Stroke = Brushes.Yellow });
 
+
+
         if (_tree == null) return;
         if (_tree.DependsOn.Count != 1) return;
 
@@ -386,6 +463,24 @@ public class ViewModel : BindableBase
 
         var poly = new Polyline { Stroke = Brushes.Red, StrokeThickness = 2 };
         var totalRange = actualWidth / FunctionXFactor;
+
+        var totalWholeTicks = (int)totalRange;
+        var horizontalStartOffset = totalRange - totalWholeTicks;
+
+        var horizontalOffset = (horizontalStartOffset * FunctionXFactor) / 2
+                               - (totalWholeTicks % 2 != 0 ? (FunctionXFactor / 2) : 0);
+
+        for (var i = 0; i < totalWholeTicks; i++)
+        {
+            var x = i * FunctionXFactor + horizontalOffset;
+
+            _window.FunctionCanvas.Children.Add(new Line
+            {
+                Stroke = Brushes.Black,
+                X1 = x, X2 = x,
+                Y1 = 0, Y2 = actualHeight,
+            });
+        }
 
         var vars = new Dictionary<string, double>();
         try
